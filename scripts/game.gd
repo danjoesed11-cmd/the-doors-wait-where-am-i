@@ -250,7 +250,6 @@ func _companion_slot(index: int) -> PanelContainer:
 	var style := StyleBoxFlat.new()
 	style.set_corner_radius_all(4)
 	style.set_border_width_all(2)
-	panel.add_child(style)
 
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
