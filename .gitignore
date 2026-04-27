@@ -1,0 +1,13 @@
+# Godot
+.godot/
+*.import
+*.tmp
+*.uid
+
+# Export output (keep docs/ but ignore large binaries if needed)
+docs/game/*.wasm
+docs/game/*.pck
+
+# OS
+.DS_Store
+Thumbs.db

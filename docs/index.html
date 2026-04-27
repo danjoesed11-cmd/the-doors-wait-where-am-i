@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Choose a door. Every door decides your fate. A horror/fantasy/action roguelike." />
+  <meta property="og:title"       content="The Doors... Wait where am I?!" />
+  <meta property="og:description" content="Choose a door. Every door decides your fate." />
+  <meta property="og:type"        content="website" />
+  <title>The Doors... Wait where am I?!</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #07030f;
+      --bg2:       #0e0819;
+      --bg3:       #130c22;
+      --gold:      #c8952a;
+      --gold-lt:   #e8b84a;
+      --gold-dim:  #5a3d0e;
+      --text:      #cdbea4;
+      --text-dim:  #7a6a58;
+      --red:       #922020;
+      --amber:     #c86418;
+      --violet:    #7a18cc;
+      --blue:      #1878cc;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Crimson Text', Georgia, serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ─── Particles ─── */
+    #particles {
+      position: fixed; inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .p {
+      position: absolute;
+      border-radius: 50%;
+      animation: rise linear infinite;
+      opacity: 0;
+    }
+    @keyframes rise {
+      0%   { transform: translateY(110vh) scale(0.2); opacity: 0; }
+      8%   { opacity: 1; }
+      92%  { opacity: 0.5; }
+      100% { transform: translateY(-8vh) scale(1.8); opacity: 0; }
+    }
+
+    /* ─── Nav ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      background: rgba(7,3,15,0.85);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(200,149,42,0.12);
+    }
+    .nav-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--gold); }
+
+    /* ─── Page wrapper ─── */
+    .page { position: relative; z-index: 1; }
+
+    /* ─── Hero ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 100px 24px 60px;
+      background:
+        radial-gradient(ellipse 80% 50% at 50% 70%, rgba(60,10,120,0.28) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 30% at 20% 40%, rgba(180,80,10,0.1) 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 40%, rgba(10,60,160,0.1) 0%, transparent 60%);
+    }
+
+    .eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 30px;
+    }
+
+    h1 {
+      font-family: 'Cinzel', serif;
+      font-weight: 900;
+      font-size: clamp(36px, 7vw, 80px);
+      line-height: 1.1;
+      color: var(--gold);
+      text-shadow: 0 0 60px rgba(200,149,42,0.3), 0 0 120px rgba(200,149,42,0.1);
+      max-width: 900px;
+      margin-bottom: 16px;
+    }
+
+    .tagline {
+      font-size: clamp(17px, 2.5vw, 22px);
+      font-style: italic;
+      color: var(--text-dim);
+      margin-bottom: 60px;
+      max-width: 500px;
+    }
+
+    /* ─── Door trio ─── */
+    .doors {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 64px;
+      perspective: 600px;
+    }
+
+    .door {
+      width: 80px;
+      height: 148px;
+      border-radius: 5px 5px 0 0;
+      border: 2px solid;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+      transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), box-shadow 0.35s;
+    }
+    .door:hover { transform: translateY(-10px) rotateX(4deg); }
+    .door::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent 50%, rgba(0,0,0,0.5));
+    }
+    .door-rune { font-size: 28px; z-index: 1; }
+    .door-label {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 1px;
+      z-index: 1;
+      opacity: 0.6;
+    }
+
+    .door.a { background: #1c0c02; border-color: #7a4808; box-shadow: 0 0 20px rgba(200,100,20,0.15); color: #c87020; }
+    .door.v { background: #110620; border-color: #5a0898; box-shadow: 0 0 20px rgba(120,20,200,0.15); color: #9a30e0; }
+    .door.b { background: #020c1c; border-color: #084070; box-shadow: 0 0 20px rgba(20,100,200,0.15); color: #2080d0; }
+    .door.a:hover { box-shadow: 0 8px 40px rgba(200,100,20,0.4); }
+    .door.v:hover { box-shadow: 0 8px 40px rgba(120,20,200,0.4); }
+    .door.b:hover { box-shadow: 0 8px 40px rgba(20,100,200,0.4); }
+
+    /* ─── CTA buttons ─── */
+    .cta-row {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-decoration: none;
+      padding: 16px 44px;
+      border-radius: 3px;
+      border: 2px solid;
+      transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+      cursor: pointer;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      color: var(--bg);
+      background: var(--gold);
+      border-color: var(--gold);
+    }
+    .btn-primary:hover { background: var(--gold-lt); border-color: var(--gold-lt); box-shadow: 0 6px 30px rgba(200,149,42,0.4); }
+    .btn-outline {
+      color: var(--gold);
+      background: transparent;
+      border-color: var(--gold-dim);
+    }
+    .btn-outline:hover { border-color: var(--gold); box-shadow: 0 6px 30px rgba(200,149,42,0.2); }
+
+    /* ─── Divider ─── */
+    .divider {
+      width: 100%;
+      max-width: 360px;
+      margin: 0 auto;
+      border: none;
+      border-top: 1px solid rgba(200,149,42,0.15);
+    }
+
+    /* ─── Sections ─── */
+    section { padding: 88px 24px; }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+    .section-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      letter-spacing: 5px;
+      color: var(--gold-dim);
+      margin-bottom: 14px;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(22px, 3.5vw, 34px);
+      color: var(--gold);
+    }
+
+    /* ─── Feature grid ─── */
+    #features { background: var(--bg2); }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid rgba(200,149,42,0.1);
+      border-radius: 8px;
+      padding: 30px 22px;
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .feature-card:hover { border-color: rgba(200,149,42,0.35); transform: translateY(-3px); }
+    .feature-icon { font-size: 26px; margin-bottom: 14px; }
+    .feature-title {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .feature-desc { font-size: 15px; color: var(--text-dim); line-height: 1.75; }
+
+    /* ─── Rarities ─── */
+    #rarities { background: var(--bg3); }
+    .rarity-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+    .rarity-pill {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      padding: 10px 22px;
+      border: 1px solid;
+      border-radius: 40px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .rarity-pill:hover { transform: scale(1.05); }
+    .r0 { color:#a0a0a0; border-color:#404040; }
+    .r0:hover { box-shadow: 0 0 14px rgba(160,160,160,0.3); }
+    .r1 { color:#4a8cf0; border-color:#2050a0; }
+    .r1:hover { box-shadow: 0 0 14px rgba(74,140,240,0.3); }
+    .r2 { color:#aa44e8; border-color:#6618a0; }
+    .r2:hover { box-shadow: 0 0 14px rgba(170,68,232,0.3); }
+    .r3 { color:#f0a820; border-color:#a06010; }
+    .r3:hover { box-shadow: 0 0 14px rgba(240,168,32,0.3); }
+    .r4 { color:#e84428; border-color:#902010; }
+    .r4:hover { box-shadow: 0 0 14px rgba(232,68,40,0.3); }
+    .r5 { color:#cc1010; border-color:#800808; }
+    .r5:hover { box-shadow: 0 0 14px rgba(180,10,10,0.4); }
+    .r6 { color:#fff060; border-color:#c8a010; background: rgba(255,240,60,0.04); }
+    .r6:hover { box-shadow: 0 0 20px rgba(255,230,50,0.4); }
+
+    .rarity-weapons {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      max-width: 860px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .weapon-example {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-size: 13px;
+    }
+    .weapon-name { font-weight: 600; margin-bottom: 3px; }
+    .weapon-stat { font-size: 11px; color: var(--text-dim); }
+
+    /* ─── Companions ─── */
+    #companions { background: var(--bg2); }
+    .companion-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    .companion-card {
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 8px;
+      padding: 20px 16px;
+      background: rgba(255,255,255,0.02);
+      transition: border-color 0.25s, transform 0.25s;
+    }
+    .companion-card:hover { transform: translateY(-3px); }
+    .companion-type {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 3px;
+      margin-bottom: 8px;
+    }
+    .companion-name {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .companion-passive {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--text-dim);
+    }
+    .ct-fighter { color: #e04428; border-color: rgba(224,68,40,0.3) !important; }
+    .ct-healer  { color: #28c858; border-color: rgba(40,200,88,0.3) !important; }
+    .ct-mage    { color: #aa44e8; border-color: rgba(170,68,232,0.3) !important; }
+    .ct-scout   { color: #f0c020; border-color: rgba(240,192,32,0.3) !important; }
+
+    /* ─── How to play ─── */
+    #howtoplay { background: var(--bg); }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0;
+      max-width: 900px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .step {
+      padding: 24px;
+      text-align: center;
+      position: relative;
+    }
+    .step-num {
+      font-family: 'Cinzel', serif;
+      font-size: 40px;
+      font-weight: 900;
+      color: var(--gold-dim);
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .step-title {
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: var(--gold);
+      margin-bottom: 10px;
+    }
+    .step-desc { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
+
+    /* ─── Footer ─── */
+    footer {
+      background: var(--bg);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      padding: 48px 24px;
+      text-align: center;
+    }
+    .footer-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+    .footer-sub {
+      font-size: 14px;
+      font-style: italic;
+      color: var(--text-dim);
+      margin-bottom: 28px;
+    }
+    .footer-links { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .footer-links a {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy {
+      margin-top: 32px;
+      font-size: 12px;
+      color: rgba(122,106,88,0.5);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 600px) {
+      nav { padding: 0 16px; }
+      .nav-links { display: none; }
+      .doors { gap: 10px; }
+      .door { width: 68px; height: 126px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="particles"></div>
+
+<nav>
+  <a class="nav-logo" href="#">THE DOORS</a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#rarities">Weapons</a></li>
+    <li><a href="#companions">Companions</a></li>
+    <li><a href="#howtoplay">How to Play</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <p class="eyebrow">Horror &nbsp;·&nbsp; Fantasy &nbsp;·&nbsp; Action</p>
+    <h1>The Doors...<br>Wait where am I?!</h1>
+    <p class="tagline">Three doors. One fate. Every round changes everything.</p>
+
+    <div class="doors">
+      <div class="door a"><span class="door-rune">ᚠ</span><span class="door-label">DOOR I</span></div>
+      <div class="door v"><span class="door-rune">ᚢ</span><span class="door-label">DOOR II</span></div>
+      <div class="door b"><span class="door-rune">ᚦ</span><span class="door-label">DOOR III</span></div>
+    </div>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="game/index.html">▶ &nbsp; PLAY NOW</a>
+      <a class="btn btn-outline" href="https://github.com/YOUR_USERNAME/door-of-fate" target="_blank" rel="noopener">GitHub</a>
+    </div>
+  </section>
+
+  <hr class="divider" style="margin:0 auto;">
+
+  <!-- ── Features ── -->
+  <section id="features">
+    <div class="section-header">
+      <p class="section-eyebrow">What Awaits</p>
+      <h2 class="section-title">Every Door is a Gamble</h2>
+    </div>
+    <div class="feature-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🚪</div>
+        <div class="feature-title">Three Doors Per Round</div>
+        <div class="feature-desc">Each round presents three mystery doors. Behind each: combat, traps, loot, companions, death, or glory. You can never be sure which.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚔️</div>
+        <div class="feature-title">Weapons & Arsenal</div>
+        <div class="feature-desc">Find weapons across seven rarities. Carry three at a time. When your arsenal is full, choose what to drop and what to keep.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧑‍🤝‍🧑</div>
+        <div class="feature-title">Companions & Bonds</div>
+        <div class="feature-desc">Recruit fighters, healers, mages, and scouts. Relationships grow as you survive together — and break when things go wrong.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎲</div>
+        <div class="feature-title">Dice-Based Combat</div>
+        <div class="feature-desc">Combat plays out round by round. Your weapon damage, luck, combat wins, and companions all tip the scales in your favour.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <div class="feature-title">Three Save Files</div>
+        <div class="feature-desc">Three separate runs. Each door you survive through is auto-saved — weapons, companions, and all. Come back whenever.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📈</div>
+        <div class="feature-title">Escalating Fate</div>
+        <div class="feature-desc">The deeper you go, the darker the corridor. Round 15 is nothing like round 1. Win conditions only appear when you've earned them.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Rarities ── -->
+  <section id="rarities">
+    <div class="section-header">
+      <p class="section-eyebrow">Arsenal</p>
+      <h2 class="section-title">Seven Weapon Rarities</h2>
+    </div>
+    <div class="rarity-grid">
+      <span class="rarity-pill r0">Common</span>
+      <span class="rarity-pill r1">Rare</span>
+      <span class="rarity-pill r2">Epic</span>
+      <span class="rarity-pill r3">Legendary</span>
+      <span class="rarity-pill r4">Mythic</span>
+      <span class="rarity-pill r5">Hellish</span>
+      <span class="rarity-pill r6">✦ Godlike ✦</span>
+    </div>
+    <div class="rarity-weapons" style="margin-top:40px;">
+      <div class="weapon-example"><div class="weapon-name" style="color:#a0a0a0">Rusted Knife</div><div class="weapon-stat">Common &nbsp;·&nbsp; +3 DMG</div></div>
+      <div class="weapon-example"><div class="weapon-name" style="color:#4a8cf0">Silver Dagger</div><div class="weapon-stat">Rare &nbsp;·&nbsp; +7 DMG</div></div>
+      <div class="weapon-example"><div class="weapon-name" style="color:#aa44e8">Dragon Fang</div><div class="weapon-stat">Epic &nbsp;·&nbsp; +14 DMG</div></div>
+      <div class="weapon-example"><div class="weapon-name" style="color:#f0a820">Reaper's Scythe</div><div class="weapon-stat">Legendary &nbsp;·&nbsp; +20 DMG</div></div>
+      <div class="weapon-example"><div class="weapon-name" style="color:#e84428">Godslayer</div><div class="weapon-stat">Mythic &nbsp;·&nbsp; +35 DMG</div></div>
+      <div class="weapon-example"><div class="weapon-name" style="color:#cc1010">Satan's Pitchfork</div><div class="weapon-stat">Hellish &nbsp;·&nbsp; +50 DMG</div></div>
+      <div class="weapon-example" style="background:rgba(255,240,60,0.04);border-color:rgba(200,160,20,0.3)"><div class="weapon-name" style="color:#fff060">Divine Judgment</div><div class="weapon-stat" style="color:#a08020">Godlike &nbsp;·&nbsp; +75 DMG</div></div>
+    </div>
+  </section>
+
+  <!-- ── Companions ── -->
+  <section id="companions">
+    <div class="section-header">
+      <p class="section-eyebrow">Allies</p>
+      <h2 class="section-title">Ten Companions</h2>
+    </div>
+    <div class="companion-grid">
+      <div class="companion-card ct-fighter"><div class="companion-type ct-fighter">FIGHTER</div><div class="companion-name">Sir Aldric</div><div class="companion-passive">+8 combat power. He fights beside you.</div></div>
+      <div class="companion-card ct-fighter"><div class="companion-type ct-fighter">FIGHTER</div><div class="companion-name">The Iron Wolf</div><div class="companion-passive">+10 combat power. Enemies hesitate.</div></div>
+      <div class="companion-card ct-fighter"><div class="companion-type ct-fighter">FIGHTER</div><div class="companion-name">Zara the Blade</div><div class="companion-passive">+6 combat power. First strike.</div></div>
+      <div class="companion-card ct-healer"><div class="companion-type ct-healer">HEALER</div><div class="companion-name">Sister Mara</div><div class="companion-passive">Heal 10 HP after each round.</div></div>
+      <div class="companion-card ct-healer"><div class="companion-type ct-healer">HEALER</div><div class="companion-name">Old Henrick</div><div class="companion-passive">Potions restore +20 extra HP.</div></div>
+      <div class="companion-card ct-healer"><div class="companion-type ct-healer">HEALER</div><div class="companion-name">Lyria the Lost</div><div class="companion-passive">Revive once per run at 20 HP.</div></div>
+      <div class="companion-card ct-mage"><div class="companion-type ct-mage">MAGE</div><div class="companion-name">Seraphine</div><div class="companion-passive">+3 luck per round.</div></div>
+      <div class="companion-card ct-mage"><div class="companion-type ct-mage">MAGE</div><div class="companion-name">The Blind Sage</div><div class="companion-passive">+5 luck per round.</div></div>
+      <div class="companion-card ct-scout"><div class="companion-type ct-scout">SCOUT</div><div class="companion-name">Kira</div><div class="companion-passive">Trap damage reduced 30%.</div></div>
+      <div class="companion-card ct-scout"><div class="companion-type ct-scout">SCOUT</div><div class="companion-name">Shadow Fox</div><div class="companion-passive">+5 dodge in combat.</div></div>
+    </div>
+  </section>
+
+  <!-- ── How to Play ── -->
+  <section id="howtoplay">
+    <div class="section-header">
+      <p class="section-eyebrow">Getting Started</p>
+      <h2 class="section-title">How to Play</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-title">Pick a Save File</div>
+        <div class="step-desc">Choose one of three save files to begin your run — or continue where you left off.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-title">Choose a Door</div>
+        <div class="step-desc">Three doors appear each round. Tap one. There is no safe choice — only your best guess.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-title">Face What's Behind It</div>
+        <div class="step-desc">Combat, traps, boons, weapons, companions, lore — or instant death. React accordingly.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">04</div>
+        <div class="step-title">Survive Long Enough</div>
+        <div class="step-desc">Win conditions appear from round 10 onward. Defeat Satan, ascend as an angel, or claim the throne.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Footer ── -->
+  <footer>
+    <div class="footer-title">The Doors... Wait where am I?!</div>
+    <div class="footer-sub">The corridor never ends. <em>But some doors lead out.</em></div>
+    <div class="cta-row" style="margin-bottom:28px;">
+      <a class="btn btn-primary" href="game/index.html">▶ &nbsp; Play Now</a>
+      <a class="btn btn-outline" href="https://github.com/YOUR_USERNAME/door-of-fate" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="footer-copy">Built with Godot 4.6 &nbsp;·&nbsp; Designed for mobile &nbsp;·&nbsp; Open source</div>
+  </footer>
+
+</div>
+
+<script>
+  // Floating particles
+  const wrap = document.getElementById('particles');
+  const cols = [
+    'rgba(200,149,42,', 'rgba(120,20,200,',
+    'rgba(20,100,200,', 'rgba(180,40,20,'
+  ];
+  for (let i = 0; i < 32; i++) {
+    const el  = document.createElement('div');
+    el.className = 'p';
+    const sz  = Math.random() * 3.5 + 0.8;
+    const col = cols[Math.floor(Math.random() * cols.length)];
+    Object.assign(el.style, {
+      width:                 `${sz}px`,
+      height:                `${sz}px`,
+      left:                  `${Math.random() * 100}%`,
+      background:            `${col}0.9)`,
+      animationDuration:     `${Math.random() * 16 + 9}s`,
+      animationDelay:        `${Math.random() * 12}s`,
+    });
+    wrap.appendChild(el);
+  }
+</script>
+</body>
+</html>
