@@ -4,9 +4,7 @@
 *.tmp
 *.uid
 
-# Export output (keep docs/ but ignore large binaries if needed)
-docs/game/*.wasm
-docs/game/*.pck
+# Export output
 
 # OS
 .DS_Store
