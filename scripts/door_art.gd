@@ -48,11 +48,25 @@ var _highlighted: bool = false
 var _open_btn: Button
 var _name_label: Label
 
-func setup(idx: int, dname: String) -> void:
+func setup(idx: int, dname: String, hint: String = "") -> void:
 	door_index = idx % SCHEMES.size()
 	if _name_label:
 		_name_label.text = dname
 		_name_label.add_theme_color_override("font_color", SCHEMES[door_index]["accent"])
+	if hint != "":
+		var hl := Label.new()
+		hl.text = hint
+		hl.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		hl.offset_top    = -56
+		hl.offset_bottom = -42
+		hl.offset_left   = 4
+		hl.offset_right  = -4
+		hl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+		hl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hl.add_theme_font_size_override("font_size", 7)
+		hl.add_theme_color_override("font_color", Color(SCHEMES[door_index]["light"].r, SCHEMES[door_index]["light"].g, SCHEMES[door_index]["light"].b, 0.72))
+		add_child(hl)
 	queue_redraw()
 
 func _ready() -> void:

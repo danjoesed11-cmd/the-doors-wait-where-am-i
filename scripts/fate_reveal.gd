@@ -76,8 +76,14 @@ func _build_ui() -> void:
 	title_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title_label.add_theme_font_size_override("font_size", 36)
 	title_label.add_theme_color_override("font_color", Color(0.95, 0.88, 0.7))
-	title_label.custom_minimum_size = Vector2(0, 80)
+	title_label.custom_minimum_size = Vector2(0, 70)
 	content.add_child(title_label)
+
+	var art := FateArt.new()
+	art.custom_minimum_size = Vector2(0, 180)
+	art.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	art.setup(fate.id, fate.type, fate.effect.get("enemy_name", ""))
+	content.add_child(art)
 
 	var div := Label.new()
 	div.text = "— — — — — — — — — — —"
@@ -324,6 +330,33 @@ func _start_combat(effect: Dictionary, win_fight: bool) -> void:
 	enemy_label.text    = "%s\nHP: %d" % [effect.get("enemy_name", "Beast"), enemy_hp]
 	enemy_label.visible = true
 	fight_btn.visible   = true
+	_refresh_potion_btn()
+
+func _refresh_potion_btn() -> void:
+	var existing = action_area.get_node_or_null("PotionBtn")
+	if existing:
+		existing.queue_free()
+	if Inventory.heal_count <= 0:
+		return
+	var btn := Button.new()
+	btn.name = "PotionBtn"
+	btn.text = "USE POTION  (x%d)  [ +40 HP ]" % Inventory.heal_count
+	btn.custom_minimum_size = Vector2(0, 48)
+	btn.add_theme_font_size_override("font_size", 14)
+	btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
+	var sty := StyleBoxFlat.new()
+	sty.bg_color     = Color(0.04, 0.16, 0.07)
+	sty.border_color = Color(0.22, 0.65, 0.28)
+	sty.set_border_width_all(1)
+	sty.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("normal", sty)
+	btn.pressed.connect(func():
+		if Inventory.use_heal():
+			_refresh_hp()
+			_refresh_potion_btn()
+	)
+	action_area.add_child(btn)
+	action_area.move_child(btn, 0)
 
 func _on_fight() -> void:
 	var dodge = CompanionSystem.get_dodge_bonus()

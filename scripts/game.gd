@@ -104,7 +104,7 @@ func _build_ui() -> void:
 		dp.size_flags_vertical   = Control.SIZE_EXPAND_FILL
 		dp.door_index = i
 		doors_hbox.add_child(dp)
-		dp.setup(i, name_pool[i])
+		dp.setup(i, name_pool[i], _hint_for_fate(fates[i]))
 		dp.door_pressed.connect(_on_door_chosen.bind(i))
 		door_panels.append(dp)
 
@@ -228,17 +228,31 @@ func _heal_slot() -> PanelContainer:
 
 	if Inventory.heal_count > 0 and PlayerStats.hp < PlayerStats.max_hp:
 		var use_btn := Button.new()
-		use_btn.text = "USE"
-		use_btn.add_theme_font_size_override("font_size", 11)
-		use_btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.4))
+		use_btn.text = "▲ USE ▲"
+		use_btn.custom_minimum_size = Vector2(0, 22)
+		use_btn.add_theme_font_size_override("font_size", 12)
+		use_btn.add_theme_color_override("font_color", Color(0.3, 0.95, 0.45))
+		var use_sty := StyleBoxFlat.new()
+		use_sty.bg_color     = Color(0.05, 0.22, 0.08)
+		use_sty.border_color = Color(0.25, 0.75, 0.32)
+		use_sty.set_border_width_all(1)
+		use_sty.set_corner_radius_all(3)
+		use_btn.add_theme_stylebox_override("normal", use_sty)
 		use_btn.pressed.connect(func(): Inventory.use_heal())
 		vbox.add_child(use_btn)
+	elif Inventory.heal_count > 0:
+		var full_lbl := Label.new()
+		full_lbl.text = "HP FULL"
+		full_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		full_lbl.add_theme_font_size_override("font_size", 8)
+		full_lbl.add_theme_color_override("font_color", Color(0.3, 0.55, 0.32))
+		vbox.add_child(full_lbl)
 	else:
 		var dim := Label.new()
-		dim.text = "( heal +40 )"
+		dim.text = "heal +40"
 		dim.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		dim.add_theme_font_size_override("font_size", 8)
-		dim.add_theme_color_override("font_color", Color(0.25, 0.35, 0.25))
+		dim.add_theme_color_override("font_color", Color(0.22, 0.32, 0.22))
 		vbox.add_child(dim)
 
 	return panel
@@ -289,6 +303,22 @@ func _companion_slot(index: int) -> PanelContainer:
 
 	panel.add_theme_stylebox_override("panel", style)
 	return panel
+
+const _HINTS = [
+	["The air grows cold.", "Something watches from within.", "Complete silence.", "The door feels heavier.", "A smell you cannot name."],
+	["Impossible warmth.", "A sound like singing.", "The door practically vibrates.", "Light. Actual light."],
+	["Something shifts in the dark.", "You hear breathing.", "A low sound. Maybe a growl.", "The handle is warm."],
+	["The floor creaks wrong.", "A faint hiss from within.", "The air tastes of metal.", "Something drips."],
+	["Warm light seeps through.", "The door feels lighter.", "A gentle hum.", "It smells of rain."],
+	["Candlelight flickers beyond.", "You hear pages turning.", "A voice. Barely.", "Someone is already inside."],
+	["A dull gleam at the keyhole.", "Metal. Old, but kept.", "The weight of steel.", "Something was left behind."],
+	["A shadow moves — human-shaped.", "Controlled breathing.", "Not alone in there.", "Knocking. From inside."],
+	["Something glows faintly.", "A scent of herbs.", "Faint warmth.", "Glass. Liquid. Something."],
+]
+
+func _hint_for_fate(fate) -> String:
+	var pool = _HINTS[clamp(fate.type, 0, _HINTS.size()-1)]
+	return pool[abs(fate.id.hash()) % pool.size()]
 
 func _rel_label(rel: int) -> String:
 	if rel >= 85: return "DEVOTED"
