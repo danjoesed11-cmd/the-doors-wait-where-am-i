@@ -30,10 +30,10 @@ func _register_fates() -> void:
 		"The darkness had teeth. You never saw it coming.", 3, -1, 8))
 	all_fates.append(FateData.new("death_fall", FateType.DEATH,
 		"THE FALL", "The floor gives way. You plummet into nothing.",
-		"They say you don't feel anything after the first impact.", 2, 12, 6))
+		"They say you don't feel anything after the first impact.", 2, 12, 1))
 	all_fates.append(FateData.new("death_spiked", FateType.DEATH,
 		"SPIKED", "Ancient mechanisms spring to life the moment the door swings open.",
-		"The trap was set centuries ago. It waited just for you.", 1, 10, 7))
+		"The trap was set centuries ago. It waited just for you.", 1, 10, 1))
 	all_fates.append(FateData.new("death_old_age", FateType.DEATH,
 		"OLD AGE", "You have wandered these halls for decades. Time caught you at last.",
 		"Generations passed. The doors never ended. You became dust.", 13, -1, 12))
@@ -42,7 +42,7 @@ func _register_fates() -> void:
 		"You open the door. It smiles. Then nothing.", 4, -1, 6))
 	all_fates.append(FateData.new("death_drowned", FateType.DEATH,
 		"DROWNED", "The room floods instantly. There is no way out.",
-		"The water is cold. Impossibly cold.", 5, -1, 5))
+		"The water is cold. Impossibly cold.", 5, -1, 1))
 
 	# WIN
 	all_fates.append(FateData.new("win_defeat_satan", FateType.WIN,
