@@ -14,6 +14,7 @@ var fate = null
 var enemy_hp: int = 0
 var enemy_power: int = 0
 var is_win_fight: bool = false
+var _is_first_strike: bool = false
 
 const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE"]
 const TYPE_COLORS = [
@@ -478,13 +479,15 @@ func _handle_marriage() -> void:
 
 # ── COMBAT ────────────────────────────────────────────────────────────
 func _start_combat(effect: Dictionary, win_fight: bool) -> void:
-	is_win_fight = win_fight
-	enemy_hp     = effect.get("enemy_hp", 30)
-	enemy_power  = effect.get("enemy_power", 10)
+	is_win_fight    = win_fight
+	_is_first_strike = true
+	enemy_hp    = effect.get("enemy_hp", 30)
+	enemy_power = effect.get("enemy_power", 10)
 	enemy_label.text    = "%s\nHP: %d" % [effect.get("enemy_name", "Beast"), enemy_hp]
 	enemy_label.visible = true
 	fight_btn.visible   = true
 	_refresh_potion_btn()
+	_show_weapon_effects_hint()
 
 func _refresh_potion_btn() -> void:
 	var ex = action_area.get_node_or_null("PotionBtn")
@@ -511,19 +514,65 @@ func _refresh_potion_btn() -> void:
 	action_area.add_child(btn)
 	action_area.move_child(btn, 0)
 
+func _show_weapon_effects_hint() -> void:
+	var fx = Inventory.get_weapon_effects()
+	var parts: Array = []
+	if fx["double_roll"]:     parts.append("Dagger: roll twice")
+	if fx["flat_bonus"] > 0:  parts.append("Axe: +%d dmg" % fx["flat_bonus"])
+	if fx["reduce_enemy"] > 0:parts.append("Bow: -%d enemy" % fx["reduce_enemy"])
+	if fx["first_strike"]:    parts.append("Spear: first strike x2")
+	if fx["stun_chance"] > 0: parts.append("Hammer: %.0f%% stun" % (fx["stun_chance"]*100))
+	if fx["lifesteal"] > 0:   parts.append("Scythe: lifesteal")
+	if fx["dmg_mult"] > 1.0:  parts.append("Greatsword: 1.5x dmg")
+	if parts.is_empty(): return
+	var lbl := Label.new()
+	lbl.text = "  ".join(parts)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	lbl.add_theme_font_size_override("font_size", 10)
+	lbl.add_theme_color_override("font_color", Color(0.62, 0.58, 0.38))
+	action_area.add_child(lbl)
+	action_area.move_child(lbl, 0)
+
 func _on_fight() -> void:
-	var dodge = CompanionSystem.get_dodge_bonus()
-	var p = randi() % 20 + 1 + PlayerStats.get_combat_power()
-	var e = randi() % 20 + 1 + enemy_power - dodge
-	if p >= e:
+	var fx    = Inventory.get_weapon_effects()
+	var dodge = CompanionSystem.get_dodge_bonus() + fx["reduce_enemy"]
+
+	# Player roll — daggers roll twice and take the higher
+	var p_roll = randi() % 20 + 1
+	if fx["double_roll"]:
+		p_roll = max(p_roll, randi() % 20 + 1)
+	var p = p_roll + PlayerStats.get_combat_power()
+
+	# Hammer stun — enemy skips their counter this round
+	var stunned = randf() < fx["stun_chance"]
+	var e = 0 if stunned else randi() % 20 + 1 + enemy_power - dodge
+
+	var msg = ""
+	if p >= e or stunned:
 		var dmg = max(5, p - e + 6)
+		# Greatsword multiplier
+		dmg = int(dmg * fx["dmg_mult"])
+		# Spear first-strike double
+		if _is_first_strike and fx["first_strike"]:
+			dmg *= 2
+			msg = "FIRST STRIKE!  "
+		_is_first_strike = false
+		if stunned: msg = "STUNNED!  "
 		enemy_hp -= dmg
-		enemy_label.text = enemy_label.text.split("\n")[0] + "\nHP: %d" % max(0, enemy_hp)
+		# Scythe lifesteal
+		var steal = int(dmg * fx["lifesteal"])
+		if steal > 0:
+			PlayerStats.heal(steal)
+			_refresh_hp()
+			msg += "+%d HP  " % steal
+		enemy_label.text = "%s\nHP: %d   %s" % [
+			enemy_label.text.split("\n")[0], max(0, enemy_hp), msg]
 		if enemy_hp <= 0:
 			_combat_victory()
 	else:
-		var dmg = max(3, e - p + 4)
-		PlayerStats.take_damage(dmg)
+		var incoming = max(3, e - p + 4) + fx["incoming_penalty"]
+		PlayerStats.take_damage(incoming)
 		_refresh_hp()
 		_refresh_potion_btn()
 		if not PlayerStats.is_alive():

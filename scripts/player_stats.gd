@@ -89,7 +89,7 @@ func get_combat_power() -> int:
 	var power = 10 + (combat_wins * 2) + luck
 	var inv = get_node_or_null("/root/Inventory")
 	var cs  = get_node_or_null("/root/CompanionSystem")
-	if inv: power += inv.get_damage_bonus()
+	if inv: power += inv.get_damage_bonus() + inv.get_weapon_luck_bonus(luck)
 	if cs:  power += cs.get_combat_bonus()
 	if is_married() and partner.get("bonus_type", "") == "fighter":
 		power += 8

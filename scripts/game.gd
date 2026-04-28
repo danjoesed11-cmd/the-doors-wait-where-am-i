@@ -185,17 +185,32 @@ func _weapon_slot(index: int) -> PanelContainer:
 	panel.add_child(vbox)
 
 	if index < Inventory.weapons.size():
-		var w  = Inventory.weapons[index]
-		var rc = Inventory.rarity_color(w.get("rarity", 0))
-		style.bg_color     = Color(rc.r * 0.15, rc.g * 0.15, rc.b * 0.15, 0.9)
+		var w   = Inventory.weapons[index]
+		var rc  = Inventory.rarity_color(w.get("rarity", 0))
+		var wt  = w.get("weapon_type", "sword")
+		var wtc = Inventory.wtype_color(wt)
+		style.bg_color     = Color(rc.r * 0.12, rc.g * 0.12, rc.b * 0.14, 0.92)
 		style.border_color = rc
+
+		# Rarity + type row
+		var top_row := HBoxContainer.new()
+		top_row.add_theme_constant_override("separation", 2)
+		vbox.add_child(top_row)
 
 		var r_lbl := Label.new()
 		r_lbl.text = Inventory.rarity_name(w.get("rarity", 0)).to_upper()
-		r_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		r_lbl.add_theme_font_size_override("font_size", 8)
+		r_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		r_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		r_lbl.add_theme_font_size_override("font_size", 7)
 		r_lbl.add_theme_color_override("font_color", rc)
-		vbox.add_child(r_lbl)
+		top_row.add_child(r_lbl)
+
+		var t_lbl := Label.new()
+		t_lbl.text = Inventory.wtype_label(wt)
+		t_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		t_lbl.add_theme_font_size_override("font_size", 7)
+		t_lbl.add_theme_color_override("font_color", wtc)
+		top_row.add_child(t_lbl)
 
 		var n_lbl := Label.new()
 		n_lbl.text = w.get("name", "?")
@@ -206,10 +221,11 @@ func _weapon_slot(index: int) -> PanelContainer:
 		vbox.add_child(n_lbl)
 
 		var d_lbl := Label.new()
-		d_lbl.text = "+%d DMG" % w.get("damage", 0)
+		d_lbl.text = "+%d DMG  ·  %s" % [w.get("damage", 0), Inventory.wtype_hint(wt)]
 		d_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		d_lbl.add_theme_font_size_override("font_size", 9)
-		d_lbl.add_theme_color_override("font_color", Color(0.6, 0.5, 0.35))
+		d_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		d_lbl.add_theme_font_size_override("font_size", 8)
+		d_lbl.add_theme_color_override("font_color", wtc)
 		vbox.add_child(d_lbl)
 	else:
 		style.bg_color     = Color(0.05, 0.03, 0.08, 0.6)
