@@ -1,15 +1,17 @@
 extends Control
 
-const DoorPanel = preload("res://scripts/door_art.gd")
+const DoorPanel    = preload("res://scripts/door_art.gd")
+const WalkerCanvas = preload("res://scripts/walker.gd")
 
-var round_label: Label
-var hp_label: Label
-var gold_label: Label
+var round_label:  Label
+var hp_label:     Label
+var gold_label:   Label
 var partner_label: Label
-var inv_bar: Control
-var door_panels: Array = []
-var fates: Array = []
-var can_pick: bool = true
+var inv_bar:      Control
+var walker_canvas: Control
+var door_panels:  Array = []
+var fates:        Array = []
+var can_pick:     bool  = true
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -18,6 +20,7 @@ func _ready() -> void:
 	PlayerStats.stats_changed.connect(_update_hud)
 	Inventory.inventory_changed.connect(_refresh_inv_bar)
 	CompanionSystem.companions_changed.connect(_refresh_inv_bar)
+	CompanionSystem.companions_changed.connect(_refresh_walkers)
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
@@ -47,13 +50,21 @@ func _build_ui() -> void:
 
 	var atmo := Label.new()
 	atmo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	atmo.anchor_top = 0.26; atmo.anchor_bottom = 0.46
+	atmo.anchor_top = 0.10; atmo.anchor_bottom = 0.22
 	atmo.text = "Choose wisely."
 	atmo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	atmo.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
 	atmo.add_theme_font_size_override("font_size", 13)
 	atmo.add_theme_color_override("font_color", Color(0.25, 0.16, 0.25))
 	add_child(atmo)
+
+	# Walking figures in corridor
+	walker_canvas = WalkerCanvas.new()
+	walker_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	walker_canvas.anchor_top    = 0.18
+	walker_canvas.anchor_bottom = 0.57
+	walker_canvas.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	add_child(walker_canvas)
 
 	# HUD
 	var hud := HBoxContainer.new()
@@ -128,6 +139,8 @@ func _build_ui() -> void:
 		dp.setup(i, name_pool[i], _hint_for_fate(fates[i]))
 		dp.door_pressed.connect(_on_door_chosen.bind(i))
 		door_panels.append(dp)
+
+	walker_canvas.setup(CompanionSystem.companions)
 
 func _add_torch(ax: float, ay: float) -> void:
 	var t := ColorRect.new()
@@ -386,6 +399,10 @@ func _refresh_inv_bar() -> void:
 	if not is_inside_tree() or not inv_bar or not is_instance_valid(inv_bar):
 		return
 	_populate_inv_bar()
+
+func _refresh_walkers() -> void:
+	if walker_canvas and is_instance_valid(walker_canvas):
+		walker_canvas.setup(CompanionSystem.companions)
 
 func _on_door_chosen(index: int) -> void:
 	if not can_pick:
