@@ -12,6 +12,8 @@ func save(slot: int) -> void:
 		"luck":         PlayerStats.luck,
 		"combat_wins":  PlayerStats.combat_wins,
 		"doors_opened": PlayerStats.doors_opened,
+		"gold":         PlayerStats.gold,
+		"partner":      PlayerStats.partner.duplicate(),
 		"timestamp":    Time.get_unix_time_from_system(),
 		"inventory":    Inventory.to_save(),
 		"companions":   CompanionSystem.to_save(),
@@ -38,6 +40,8 @@ func load_slot(slot: int) -> bool:
 	PlayerStats.luck         = int(data.get("luck", 0))
 	PlayerStats.combat_wins  = int(data.get("combat_wins", 0))
 	PlayerStats.doors_opened = int(data.get("doors_opened", 0))
+	PlayerStats.gold         = int(data.get("gold", 0))
+	PlayerStats.partner      = data.get("partner", {})
 	Inventory.from_save(data.get("inventory", {}))
 	CompanionSystem.from_save(data.get("companions", {}))
 	return true

@@ -4,6 +4,8 @@ const DoorPanel = preload("res://scripts/door_art.gd")
 
 var round_label: Label
 var hp_label: Label
+var gold_label: Label
+var partner_label: Label
 var inv_bar: Control
 var door_panels: Array = []
 var fates: Array = []
@@ -62,17 +64,36 @@ func _build_ui() -> void:
 	round_label = Label.new()
 	round_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	round_label.vertical_alignment    = VERTICAL_ALIGNMENT_CENTER
-	round_label.add_theme_font_size_override("font_size", 18)
+	round_label.add_theme_font_size_override("font_size", 16)
 	round_label.add_theme_color_override("font_color", Color(0.8, 0.65, 0.2))
 	hud.add_child(round_label)
+
+	gold_label = Label.new()
+	gold_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	gold_label.horizontal_alignment  = HORIZONTAL_ALIGNMENT_CENTER
+	gold_label.vertical_alignment    = VERTICAL_ALIGNMENT_CENTER
+	gold_label.add_theme_font_size_override("font_size", 16)
+	gold_label.add_theme_color_override("font_color", Color(0.9, 0.76, 0.2))
+	hud.add_child(gold_label)
 
 	hp_label = Label.new()
 	hp_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hp_label.horizontal_alignment  = HORIZONTAL_ALIGNMENT_RIGHT
 	hp_label.vertical_alignment    = VERTICAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 18)
+	hp_label.add_theme_font_size_override("font_size", 16)
 	hp_label.add_theme_color_override("font_color", Color(0.3, 0.85, 0.4))
 	hud.add_child(hp_label)
+
+	# Partner banner (below hud, shown when married)
+	partner_label = Label.new()
+	partner_label.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	partner_label.offset_top    = 68.0
+	partner_label.offset_bottom = 90.0
+	partner_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	partner_label.add_theme_font_size_override("font_size", 11)
+	partner_label.add_theme_color_override("font_color", Color(0.9, 0.55, 0.75))
+	partner_label.visible = false
+	add_child(partner_label)
 
 	_update_hud()
 
@@ -314,6 +335,8 @@ const _HINTS = [
 	["A dull gleam at the keyhole.", "Metal. Old, but kept.", "The weight of steel.", "Something was left behind."],
 	["A shadow moves — human-shaped.", "Controlled breathing.", "Not alone in there.", "Knocking. From inside."],
 	["Something glows faintly.", "A scent of herbs.", "Faint warmth.", "Glass. Liquid. Something."],
+	["Torchlight and voices.", "You smell bread and ale.", "The sound of commerce.", "Distant laughter beyond."],
+	["A familiar warmth.", "Someone watches you kindly.", "Your name, spoken gently.", "You are not alone here."],
 ]
 
 func _hint_for_fate(fate) -> String:
@@ -328,8 +351,15 @@ func _rel_label(rel: int) -> String:
 	return "HOSTILE"
 
 func _update_hud() -> void:
-	if round_label: round_label.text = "  ROUND  %d" % PlayerStats.round_number
-	if hp_label:    hp_label.text    = "HP  %d / %d  " % [PlayerStats.hp, PlayerStats.max_hp]
+	if round_label:  round_label.text  = "  ROUND  %d" % PlayerStats.round_number
+	if gold_label:   gold_label.text   = "%dg" % PlayerStats.gold
+	if hp_label:     hp_label.text     = "HP  %d/%d  " % [PlayerStats.hp, PlayerStats.max_hp]
+	if partner_label:
+		if PlayerStats.is_married():
+			partner_label.text    = "♥  %s is with you  ♥" % PlayerStats.partner.get("name", "")
+			partner_label.visible = true
+		else:
+			partner_label.visible = false
 
 func _refresh_inv_bar() -> void:
 	if not is_inside_tree() or not inv_bar or not is_instance_valid(inv_bar):

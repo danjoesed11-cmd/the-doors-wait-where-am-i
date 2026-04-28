@@ -26,6 +26,8 @@ func _draw() -> void:
 		6: _draw_weapon(w, h, cx, cy)
 		7: _draw_companion(w, h, cx, cy)
 		8: _draw_item(w, h, cx, cy)
+		9: _draw_village_scene(w, h, cx, cy)
+		10: _draw_wedding_scene(w, h, cx, cy)
 
 func _poly(pts: Array, c: Color) -> void:
 	draw_colored_polygon(PackedVector2Array(pts), c)
@@ -605,6 +607,69 @@ func _draw_sword_art(w, h, cx, cy):
 	# Sparkle
 	draw_circle(a2, h*0.022, Color(1,0.95,0.6,0.9))
 	draw_circle(a2, h*0.045, Color(1,0.92,0.4,0.35))
+
+func _draw_village_scene(w, h, cx, cy):
+	draw_rect(Rect2(0,0,w,h), Color(0.18,0.14,0.06,0.4))
+	# Ground
+	draw_rect(Rect2(0, h*0.72, w, h*0.28), Color(0.22,0.17,0.09))
+	# Left building
+	draw_rect(Rect2(w*0.04, h*0.28, w*0.22, h*0.44), Color(0.38,0.3,0.2))
+	_poly([Vector2(w*0.02,h*0.28),Vector2(w*0.15,h*0.1),Vector2(w*0.28,h*0.28)], Color(0.28,0.2,0.12))
+	draw_rect(Rect2(w*0.1,h*0.48,w*0.08,h*0.24), Color(0.18,0.1,0.05))
+	# Right building
+	draw_rect(Rect2(w*0.72, h*0.32, w*0.24, h*0.4), Color(0.4,0.32,0.22))
+	_poly([Vector2(w*0.7,h*0.32),Vector2(w*0.84,h*0.14),Vector2(w*0.98,h*0.32)], Color(0.3,0.22,0.12))
+	draw_rect(Rect2(w*0.78,h*0.52,w*0.09,h*0.2), Color(0.15,0.09,0.04))
+	# Center stall / market
+	draw_rect(Rect2(cx-w*0.12,h*0.4,w*0.24,h*0.32), Color(0.45,0.35,0.2))
+	_poly([Vector2(cx-w*0.15,h*0.4),Vector2(cx,h*0.28),Vector2(cx+w*0.15,h*0.4)], Color(0.65,0.22,0.18))
+	# Pennant strings
+	for i in range(6):
+		var px = w*0.2 + i*w*0.12
+		draw_circle(Vector2(px, h*0.26), 4.5, [Color(0.85,0.2,0.2),Color(0.2,0.6,0.2),Color(0.2,0.2,0.85)][i%3])
+	draw_line(Vector2(w*0.18,h*0.26), Vector2(w*0.82,h*0.26), Color(0.4,0.3,0.2), 1.5)
+	# Warm torchlight glow
+	draw_circle(Vector2(cx,cy+h*0.05), h*0.38, Color(0.9,0.6,0.2,0.08))
+	# People silhouettes
+	for px2 in [cx-h*0.2, cx, cx+h*0.18]:
+		_oval(Vector2(px2, h*0.6), h*0.04, h*0.04, Color(0.18,0.12,0.08))
+		draw_rect(Rect2(px2-h*0.03,h*0.64,h*0.06,h*0.1), Color(0.18,0.12,0.08))
+
+func _draw_wedding_scene(w, h, cx, cy):
+	draw_rect(Rect2(0,0,w,h), Color(0.1,0.06,0.18,0.4))
+	# Soft glow background
+	_oval(Vector2(cx,cy-h*0.04), h*0.42, h*0.4, Color(0.9,0.75,0.88,0.12))
+	# Arch of flowers
+	var ar = h*0.42
+	for i in range(14):
+		var a = PI + TAU*i/26
+		var fx3 = cx + cos(a)*ar
+		var fy3 = cy - h*0.04 + sin(a)*ar
+		draw_circle(Vector2(fx3,fy3), h*0.03, [Color(0.95,0.75,0.82),Color(0.8,0.95,0.78),Color(0.95,0.92,0.7)][i%3])
+		draw_circle(Vector2(fx3,fy3), h*0.018, Color(1,0.98,0.96))
+	# Two figures facing each other
+	var lx = cx - h*0.2; var rx = cx + h*0.2; var fy4 = cy - h*0.04
+	# Left figure (in dress)
+	_oval(Vector2(lx, fy4-h*0.26), h*0.12, h*0.13, Color(0.88,0.84,0.8))
+	_poly([Vector2(lx-h*0.16,fy4-h*0.13),Vector2(lx+h*0.12,fy4-h*0.13),Vector2(lx+h*0.2,fy4+h*0.32),Vector2(lx-h*0.24,fy4+h*0.32)], Color(0.94,0.92,0.9))
+	draw_line(Vector2(lx+h*0.12,fy4-h*0.1),Vector2(lx+h*0.2,fy4+h*0.05),Color(0.88,0.84,0.8),h*0.05)
+	# Right figure (in dark coat)
+	_oval(Vector2(rx, fy4-h*0.26), h*0.12, h*0.13, Color(0.82,0.76,0.7))
+	_poly([Vector2(rx-h*0.12,fy4-h*0.13),Vector2(rx+h*0.12,fy4-h*0.13),Vector2(rx+h*0.12,fy4+h*0.32),Vector2(rx-h*0.12,fy4+h*0.32)], Color(0.22,0.18,0.28))
+	draw_line(Vector2(rx-h*0.12,fy4-h*0.1),Vector2(rx-h*0.2,fy4+h*0.05),Color(0.82,0.76,0.7),h*0.05)
+	# Hands meeting in center
+	draw_circle(Vector2(cx,fy4+h*0.04), h*0.04, Color(0.88,0.82,0.76))
+	# Hearts rising
+	for hrt in [[-0.06,-0.12,0.7],[0,-0.2,0.9],[0.06,-0.14,0.6]]:
+		var hx = cx + hrt[0]*h; var hy = cy + hrt[1]*h; var ha = hrt[2]
+		draw_circle(Vector2(hx-h*0.018,hy-h*0.015), h*0.022, Color(0.92,0.35,0.55,ha))
+		draw_circle(Vector2(hx+h*0.018,hy-h*0.015), h*0.022, Color(0.92,0.35,0.55,ha))
+		_poly([Vector2(hx-h*0.038,hy-h*0.01),Vector2(hx,hy+h*0.042),Vector2(hx+h*0.038,hy-h*0.01)], Color(0.92,0.35,0.55,ha))
+	# Candle lights at sides
+	for cx3 in [cx-h*0.44, cx+h*0.44]:
+		draw_line(Vector2(cx3,h*0.8),Vector2(cx3,h*0.45),Color(0.78,0.7,0.58),h*0.022)
+		_poly([Vector2(cx3-h*0.03,h*0.45),Vector2(cx3,h*0.32),Vector2(cx3+h*0.03,h*0.45)],Color(0.92,0.72,0.22,0.88))
+		draw_circle(Vector2(cx3,h*0.42),h*0.06,Color(0.95,0.78,0.3,0.2))
 
 func _draw_human_silhouette(w, h, cx, cy, col: Color):
 	draw_circle(Vector2(cx,cy-h*0.28), h*0.13, col)

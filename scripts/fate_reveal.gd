@@ -15,11 +15,12 @@ var enemy_hp: int = 0
 var enemy_power: int = 0
 var is_win_fight: bool = false
 
-const TYPE_NAMES  = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM"]
+const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE"]
 const TYPE_COLORS = [
-	Color(0.9,0.15,0.15), Color(1.0,0.85,0.2), Color(0.9,0.5,0.1),
-	Color(0.7,0.2,0.7),   Color(0.2,0.8,0.4),  Color(0.4,0.7,0.9),
-	Color(0.95,0.6,0.1),  Color(0.3,0.9,0.6),  Color(0.2,0.85,0.5),
+	Color(0.9,0.15,0.15), Color(1.0,0.85,0.2),  Color(0.9,0.5,0.1),
+	Color(0.7,0.2,0.7),   Color(0.2,0.8,0.4),   Color(0.4,0.7,0.9),
+	Color(0.95,0.6,0.1),  Color(0.3,0.9,0.6),   Color(0.2,0.85,0.5),
+	Color(0.82,0.68,0.3), Color(0.95,0.55,0.75),
 ]
 
 func _ready() -> void:
@@ -35,7 +36,6 @@ func _build_ui() -> void:
 	bg.color = Color(0.025, 0.01, 0.055)
 	add_child(bg)
 
-	# HUD
 	var hud := HBoxContainer.new()
 	hud.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	hud.offset_bottom = 60.0
@@ -50,16 +50,15 @@ func _build_ui() -> void:
 	_refresh_hp()
 	hud.add_child(hp_label)
 
-	# Scroll area
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.offset_top    = 64.0
-	scroll.offset_bottom = -230.0
+	scroll.offset_bottom = -240.0
 	add_child(scroll)
 
 	var content := VBoxContainer.new()
 	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 18)
+	content.add_theme_constant_override("separation", 14)
 	scroll.add_child(content)
 
 	type_label = Label.new()
@@ -98,7 +97,7 @@ func _build_ui() -> void:
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.add_theme_font_size_override("font_size", 19)
 	desc_label.add_theme_color_override("font_color", Color(0.85, 0.78, 0.7))
-	desc_label.custom_minimum_size = Vector2(0, 70)
+	desc_label.custom_minimum_size = Vector2(0, 60)
 	content.add_child(desc_label)
 
 	flavor_label = Label.new()
@@ -107,17 +106,16 @@ func _build_ui() -> void:
 	flavor_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	flavor_label.add_theme_font_size_override("font_size", 15)
 	flavor_label.add_theme_color_override("font_color", Color(0.55, 0.48, 0.55))
-	flavor_label.custom_minimum_size = Vector2(0, 60)
+	flavor_label.custom_minimum_size = Vector2(0, 55)
 	content.add_child(flavor_label)
 
-	# Action area
 	action_area = VBoxContainer.new()
 	action_area.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	action_area.offset_top    = -225.0
+	action_area.offset_top    = -235.0
 	action_area.offset_left   = 12.0
 	action_area.offset_right  = -12.0
 	action_area.offset_bottom = -8.0
-	action_area.add_theme_constant_override("separation", 10)
+	action_area.add_theme_constant_override("separation", 8)
 	add_child(action_area)
 
 	enemy_label = Label.new()
@@ -129,7 +127,7 @@ func _build_ui() -> void:
 
 	fight_btn = Button.new()
 	fight_btn.text = "FIGHT"
-	fight_btn.custom_minimum_size = Vector2(0, 62)
+	fight_btn.custom_minimum_size = Vector2(0, 58)
 	fight_btn.add_theme_font_size_override("font_size", 22)
 	fight_btn.add_theme_color_override("font_color", Color(0.95, 0.4, 0.2))
 	fight_btn.visible = false
@@ -138,7 +136,7 @@ func _build_ui() -> void:
 
 	continue_btn = Button.new()
 	continue_btn.text = "CONTINUE →"
-	continue_btn.custom_minimum_size = Vector2(0, 62)
+	continue_btn.custom_minimum_size = Vector2(0, 58)
 	continue_btn.add_theme_font_size_override("font_size", 20)
 	continue_btn.add_theme_color_override("font_color", Color(0.9, 0.75, 0.2))
 	continue_btn.visible = false
@@ -147,7 +145,7 @@ func _build_ui() -> void:
 
 func _refresh_hp() -> void:
 	if hp_label:
-		hp_label.text = "HP  %d / %d  " % [PlayerStats.hp, PlayerStats.max_hp]
+		hp_label.text = "  HP  %d/%d   Gold %dg  " % [PlayerStats.hp, PlayerStats.max_hp, PlayerStats.gold]
 
 func _apply_fate() -> void:
 	match fate.type:
@@ -176,7 +174,12 @@ func _apply_fate() -> void:
 			_handle_companion()
 		FateSystem.FateType.ITEM:
 			_handle_item()
+		FateSystem.FateType.VILLAGE:
+			_handle_village()
+		FateSystem.FateType.MARRIAGE:
+			_handle_marriage()
 
+# ── TRAP ──────────────────────────────────────────────────────────────
 func _handle_trap() -> void:
 	var dmg  = fate.effect.get("damage", 0)
 	var luck = fate.effect.get("luck", 0)
@@ -195,21 +198,23 @@ func _handle_trap() -> void:
 	else:
 		continue_btn.visible = true
 
+# ── BOON ──────────────────────────────────────────────────────────────
 func _handle_boon() -> void:
-	var heal = fate.effect.get("heal", 0)
-	var luck = fate.effect.get("luck", 0)
-	if heal > 0:
-		PlayerStats.heal(heal)
-		_refresh_hp()
-	if luck > 0:
-		PlayerStats.add_luck(luck)
+	var heal       = fate.effect.get("heal", 0)
+	var luck       = fate.effect.get("luck", 0)
+	var max_hp_add = fate.effect.get("max_hp", 0)
+	var gold_add   = fate.effect.get("gold", 0)
+	if heal > 0:       PlayerStats.heal(heal);             _refresh_hp()
+	if luck > 0:       PlayerStats.add_luck(luck)
+	if max_hp_add > 0: PlayerStats.increase_max_hp(max_hp_add); _refresh_hp()
+	if gold_add > 0:   PlayerStats.earn_gold(gold_add);    _refresh_hp()
 	continue_btn.visible = true
 
+# ── WEAPON ────────────────────────────────────────────────────────────
 func _handle_weapon() -> void:
 	var min_r = fate.effect.get("min_rarity", 0)
 	var max_r = fate.effect.get("max_rarity", 2)
 	var weapon = Inventory.get_random_weapon(min_r, max_r)
-
 	var rc = Inventory.rarity_color(weapon.get("rarity", 0))
 	type_label.text = "[ %s WEAPON ]" % Inventory.rarity_name(weapon.get("rarity", 0)).to_upper()
 	type_label.add_theme_color_override("font_color", rc)
@@ -217,7 +222,6 @@ func _handle_weapon() -> void:
 	title_label.add_theme_color_override("font_color", rc)
 	desc_label.text  = weapon.get("desc", "")
 	flavor_label.text = "Damage bonus: +%d" % weapon.get("damage", 0)
-
 	if Inventory.add_weapon(weapon):
 		desc_label.text += "\n\nAdded to your arsenal."
 		continue_btn.visible = true
@@ -232,41 +236,32 @@ func _show_weapon_swap(new_w: Dictionary) -> void:
 	lbl.add_theme_font_size_override("font_size", 14)
 	lbl.add_theme_color_override("font_color", Color(0.75, 0.65, 0.5))
 	action_area.add_child(lbl)
-
 	for i in range(Inventory.weapons.size()):
 		var w  = Inventory.weapons[i]
 		var rc = Inventory.rarity_color(w.get("rarity", 0))
 		var slot_btn := Button.new()
-		slot_btn.text = "DROP: %s  [%s  +%d DMG]" % [
-			w.get("name", "?"),
-			Inventory.rarity_name(w.get("rarity", 0)),
-			w.get("damage", 0)
-		]
-		slot_btn.custom_minimum_size = Vector2(0, 48)
+		slot_btn.text = "DROP: %s  [%s  +%d DMG]" % [w.get("name","?"), Inventory.rarity_name(w.get("rarity",0)), w.get("damage",0)]
+		slot_btn.custom_minimum_size = Vector2(0, 46)
 		slot_btn.add_theme_font_size_override("font_size", 13)
 		slot_btn.add_theme_color_override("font_color", rc)
-		var captured_i = i
-		slot_btn.pressed.connect(func():
-			Inventory.replace_weapon(captured_i, new_w)
-			_on_continue()
-		)
+		var ci = i
+		slot_btn.pressed.connect(func(): Inventory.replace_weapon(ci, new_w); _on_continue())
 		action_area.add_child(slot_btn)
-
 	var leave_btn := Button.new()
 	leave_btn.text = "LEAVE IT BEHIND"
-	leave_btn.custom_minimum_size = Vector2(0, 44)
+	leave_btn.custom_minimum_size = Vector2(0, 42)
 	leave_btn.add_theme_font_size_override("font_size", 14)
 	leave_btn.add_theme_color_override("font_color", Color(0.5, 0.4, 0.4))
 	leave_btn.pressed.connect(_on_continue)
 	action_area.add_child(leave_btn)
 
+# ── COMPANION ─────────────────────────────────────────────────────────
 func _handle_companion() -> void:
 	var companion = CompanionSystem.get_random_companion()
 	if companion.is_empty():
-		desc_label.text = "A stranger sits here — but your party is already full, and your heart with it."
+		desc_label.text = "A stranger sits here — but your party is already full."
 		continue_btn.visible = true
 		return
-
 	var tc = CompanionSystem.type_color(companion.get("type", ""))
 	type_label.text = "[ COMPANION — %s ]" % companion.get("type", "").to_upper()
 	type_label.add_theme_color_override("font_color", tc)
@@ -274,17 +269,13 @@ func _handle_companion() -> void:
 	title_label.add_theme_color_override("font_color", tc)
 	desc_label.text  = companion.get("desc", "")
 	flavor_label.text = "Passive: %s" % companion.get("passive", "")
-
 	if CompanionSystem.companions.size() < CompanionSystem.MAX_COMPANIONS:
 		var accept_btn := Button.new()
 		accept_btn.text = "ACCEPT THEIR COMPANY"
-		accept_btn.custom_minimum_size = Vector2(0, 58)
+		accept_btn.custom_minimum_size = Vector2(0, 56)
 		accept_btn.add_theme_font_size_override("font_size", 18)
 		accept_btn.add_theme_color_override("font_color", tc)
-		accept_btn.pressed.connect(func():
-			CompanionSystem.add_companion(companion)
-			_on_continue()
-		)
+		accept_btn.pressed.connect(func(): CompanionSystem.add_companion(companion); _on_continue())
 		action_area.add_child(accept_btn)
 	else:
 		var swap_lbl := Label.new()
@@ -293,36 +284,199 @@ func _handle_companion() -> void:
 		swap_lbl.add_theme_font_size_override("font_size", 13)
 		swap_lbl.add_theme_color_override("font_color", Color(0.7, 0.6, 0.5))
 		action_area.add_child(swap_lbl)
-
 		for i in range(CompanionSystem.companions.size()):
 			var c   = CompanionSystem.companions[i]
 			var ctc = CompanionSystem.type_color(c.get("type", ""))
 			var rb  := Button.new()
-			rb.text = "REPLACE: %s  (%s)" % [c.get("name", "?"), c.get("type", "")]
-			rb.custom_minimum_size = Vector2(0, 46)
+			rb.text = "REPLACE: %s  (%s)" % [c.get("name","?"), c.get("type","")]
+			rb.custom_minimum_size = Vector2(0, 44)
 			rb.add_theme_font_size_override("font_size", 13)
 			rb.add_theme_color_override("font_color", ctc)
-			var captured_i = i
-			rb.pressed.connect(func():
-				CompanionSystem.replace_companion(captured_i, companion)
-				_on_continue()
-			)
+			var ci = i
+			rb.pressed.connect(func(): CompanionSystem.replace_companion(ci, companion); _on_continue())
 			action_area.add_child(rb)
-
 	var decline_btn := Button.new()
 	decline_btn.text = "PART WAYS"
-	decline_btn.custom_minimum_size = Vector2(0, 44)
+	decline_btn.custom_minimum_size = Vector2(0, 42)
 	decline_btn.add_theme_font_size_override("font_size", 14)
 	decline_btn.add_theme_color_override("font_color", Color(0.5, 0.4, 0.4))
 	decline_btn.pressed.connect(_on_continue)
 	action_area.add_child(decline_btn)
 
+# ── ITEM ──────────────────────────────────────────────────────────────
 func _handle_item() -> void:
 	var count = fate.effect.get("count", 1)
 	Inventory.add_heal(count)
 	desc_label.text += "\n\nFound %d healing potion%s." % [count, "s" if count > 1 else ""]
 	continue_btn.visible = true
 
+# ── VILLAGE / SHOP ────────────────────────────────────────────────────
+func _handle_village() -> void:
+	var vtype = fate.effect.get("village_type", "market")
+	var shop_box := VBoxContainer.new()
+	shop_box.add_theme_constant_override("separation", 7)
+	action_area.add_child(shop_box)
+	action_area.move_child(shop_box, 0)
+	continue_btn.visible = true
+	_fill_shop(shop_box, vtype)
+
+func _fill_shop(box: VBoxContainer, vtype: String) -> void:
+	for c in box.get_children():
+		c.queue_free()
+	await get_tree().process_frame
+
+	var gold_lbl := Label.new()
+	gold_lbl.text = "YOUR GOLD:  %dg" % PlayerStats.gold
+	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gold_lbl.add_theme_font_size_override("font_size", 16)
+	gold_lbl.add_theme_color_override("font_color", Color(0.92, 0.78, 0.2))
+	box.add_child(gold_lbl)
+
+	for item in _shop_items(vtype):
+		var can_afford = PlayerStats.gold >= item["cost"]
+		var btn := Button.new()
+		btn.text = "%s   —   %dg" % [item["name"], item["cost"]]
+		btn.custom_minimum_size = Vector2(0, 42)
+		btn.add_theme_font_size_override("font_size", 12)
+		btn.add_theme_color_override("font_color", Color(0.88, 0.78, 0.5) if can_afford else Color(0.45, 0.4, 0.35))
+		btn.disabled = not can_afford
+		var item_ref = item
+		var box_ref  = box
+		btn.pressed.connect(func():
+			if PlayerStats.spend_gold(item_ref["cost"]):
+				item_ref["action"].call()
+				_refresh_hp()
+				_fill_shop(box_ref, vtype)
+		)
+		box.add_child(btn)
+
+func _shop_items(vtype: String) -> Array:
+	match vtype:
+		"inn":
+			return [
+				{"name": "Full Meal & Rest  (full HP)", "cost": 45,
+				 "action": func(): PlayerStats.heal(PlayerStats.max_hp)},
+				{"name": "Healing Tonic  (+1 potion)", "cost": 22,
+				 "action": func(): Inventory.add_heal(1)},
+				{"name": "Warm Bed  (+20 max HP)", "cost": 95,
+				 "action": func(): PlayerStats.increase_max_hp(20)},
+			]
+		"blacksmith":
+			var min_r = clamp(int(PlayerStats.round_number / 5) - 1, 0, 5)
+			var max_r = clamp(int(PlayerStats.round_number / 5) + 1, 1, 6)
+			var bw = Inventory.get_random_weapon(min_r, max_r)
+			var bcost = 30 + bw.get("rarity", 0) * 22
+			return [
+				{"name": "%s  (%s  +%d)" % [bw.get("name","?"), Inventory.rarity_name(bw.get("rarity",0)), bw.get("damage",0)],
+				 "cost": bcost,
+				 "action": func():
+				 	if not Inventory.add_weapon(bw): Inventory.replace_weapon(0, bw)},
+				{"name": "Polish Top Weapon  (+8 DMG)", "cost": 40,
+				 "action": func(): _upgrade_top_weapon(8)},
+				{"name": "Healing Potion  (+1)", "cost": 28,
+				 "action": func(): Inventory.add_heal(1)},
+			]
+		"alchemist":
+			return [
+				{"name": "Healing Potion  (+1)", "cost": 15,
+				 "action": func(): Inventory.add_heal(1)},
+				{"name": "Potion Bundle  (+3)", "cost": 38,
+				 "action": func(): Inventory.add_heal(3)},
+				{"name": "Elixir of Fortune  (+3 luck)", "cost": 55,
+				 "action": func(): PlayerStats.add_luck(3)},
+				{"name": "Strength Draught  (+20 max HP)", "cost": 72,
+				 "action": func(): PlayerStats.increase_max_hp(20)},
+			]
+		"sage":
+			return [
+				{"name": "Tome of Luck  (+4 luck)", "cost": 52,
+				 "action": func(): PlayerStats.add_luck(4)},
+				{"name": "Combat Treatise  (+2 combat power)", "cost": 42,
+				 "action": func(): PlayerStats.combat_wins += 1},
+				{"name": "Life Crystal  (+30 max HP)", "cost": 115,
+				 "action": func(): PlayerStats.increase_max_hp(30)},
+				{"name": "Healing Herb  (+1 potion)", "cost": 18,
+				 "action": func(): Inventory.add_heal(1)},
+			]
+		_:  # market
+			return [
+				{"name": "Healing Potion  (+1)", "cost": 20,
+				 "action": func(): Inventory.add_heal(1)},
+				{"name": "Potion Crate  (+3)", "cost": 50,
+				 "action": func(): Inventory.add_heal(3)},
+				{"name": "Lucky Charm  (+2 luck)", "cost": 35,
+				 "action": func(): PlayerStats.add_luck(2)},
+				{"name": "Full Restoration  (full HP)", "cost": 80,
+				 "action": func(): PlayerStats.heal(PlayerStats.max_hp)},
+				{"name": "Adventurer Pack  (+50 HP, +2 potions)", "cost": 68,
+				 "action": func(): PlayerStats.heal(50); Inventory.add_heal(2)},
+			]
+
+func _upgrade_top_weapon(bonus: int) -> void:
+	if Inventory.weapons.is_empty(): return
+	var best = 0
+	for i in range(1, Inventory.weapons.size()):
+		if Inventory.weapons[i].get("damage", 0) > Inventory.weapons[best].get("damage", 0):
+			best = i
+	Inventory.weapons[best]["damage"] = Inventory.weapons[best].get("damage", 0) + bonus
+	Inventory.emit_signal("inventory_changed")
+
+# ── MARRIAGE ──────────────────────────────────────────────────────────
+func _handle_marriage() -> void:
+	var tc = Color(0.95, 0.55, 0.75)
+	var p  = fate.effect
+	type_label.text = "[ A CHANCE MEETING ]"
+	type_label.add_theme_color_override("font_color", tc)
+	title_label.text = p.get("partner_name", "A Stranger")
+	title_label.add_theme_color_override("font_color", tc)
+	desc_label.text  = p.get("partner_desc", fate.description)
+	flavor_label.text = "\"%s\"" % p.get("partner_quote", fate.flavor)
+
+	var bonus_lbl := Label.new()
+	bonus_lbl.text = "Bond: %s" % p.get("bonus_desc", "")
+	bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bonus_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bonus_lbl.add_theme_font_size_override("font_size", 13)
+	bonus_lbl.add_theme_color_override("font_color", Color(0.82, 0.65, 0.82))
+	action_area.add_child(bonus_lbl)
+	action_area.move_child(bonus_lbl, 0)
+
+	var propose_btn := Button.new()
+	propose_btn.text = "PROPOSE MARRIAGE"
+	propose_btn.custom_minimum_size = Vector2(0, 58)
+	propose_btn.add_theme_font_size_override("font_size", 18)
+	propose_btn.add_theme_color_override("font_color", tc)
+	var sty := StyleBoxFlat.new()
+	sty.bg_color     = Color(0.18, 0.06, 0.14)
+	sty.border_color = Color(0.85, 0.35, 0.65)
+	sty.set_border_width_all(1)
+	sty.set_corner_radius_all(4)
+	propose_btn.add_theme_stylebox_override("normal", sty)
+	propose_btn.pressed.connect(func():
+		PlayerStats.marry({
+			"name":       p.get("partner_name", ""),
+			"bonus_type": p.get("bonus_type", ""),
+			"bonus_desc": p.get("bonus_desc", ""),
+		})
+		desc_label.text = "You exchange vows in the dim corridor light.\n\nWhatever comes next, you face it together."
+		flavor_label.text = "\"%s is beside you now.\"" % p.get("partner_name", "Your partner")
+		for c in action_area.get_children():
+			if c != continue_btn:
+				c.queue_free()
+		continue_btn.visible = true
+	)
+	action_area.add_child(propose_btn)
+	action_area.move_child(propose_btn, 1)
+
+	var decline_btn := Button.new()
+	decline_btn.text = "NOT THE TIME"
+	decline_btn.custom_minimum_size = Vector2(0, 42)
+	decline_btn.add_theme_font_size_override("font_size", 14)
+	decline_btn.add_theme_color_override("font_color", Color(0.5, 0.42, 0.5))
+	decline_btn.pressed.connect(_on_continue)
+	action_area.add_child(decline_btn)
+
+# ── COMBAT ────────────────────────────────────────────────────────────
 func _start_combat(effect: Dictionary, win_fight: bool) -> void:
 	is_win_fight = win_fight
 	enemy_hp     = effect.get("enemy_hp", 30)
@@ -333,23 +487,22 @@ func _start_combat(effect: Dictionary, win_fight: bool) -> void:
 	_refresh_potion_btn()
 
 func _refresh_potion_btn() -> void:
-	var existing = action_area.get_node_or_null("PotionBtn")
-	if existing:
-		existing.queue_free()
-	if Inventory.heal_count <= 0:
+	var ex = action_area.get_node_or_null("PotionBtn")
+	if ex: ex.queue_free()
+	if Inventory.heal_count <= 0 or PlayerStats.hp >= PlayerStats.max_hp:
 		return
 	var btn := Button.new()
 	btn.name = "PotionBtn"
 	btn.text = "USE POTION  (x%d)  [ +40 HP ]" % Inventory.heal_count
-	btn.custom_minimum_size = Vector2(0, 48)
+	btn.custom_minimum_size = Vector2(0, 46)
 	btn.add_theme_font_size_override("font_size", 14)
 	btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
-	var sty := StyleBoxFlat.new()
-	sty.bg_color     = Color(0.04, 0.16, 0.07)
-	sty.border_color = Color(0.22, 0.65, 0.28)
-	sty.set_border_width_all(1)
-	sty.set_corner_radius_all(4)
-	btn.add_theme_stylebox_override("normal", sty)
+	var sty2 := StyleBoxFlat.new()
+	sty2.bg_color     = Color(0.04, 0.16, 0.07)
+	sty2.border_color = Color(0.22, 0.65, 0.28)
+	sty2.set_border_width_all(1)
+	sty2.set_corner_radius_all(4)
+	btn.add_theme_stylebox_override("normal", sty2)
 	btn.pressed.connect(func():
 		if Inventory.use_heal():
 			_refresh_hp()
@@ -362,7 +515,6 @@ func _on_fight() -> void:
 	var dodge = CompanionSystem.get_dodge_bonus()
 	var p = randi() % 20 + 1 + PlayerStats.get_combat_power()
 	var e = randi() % 20 + 1 + enemy_power - dodge
-
 	if p >= e:
 		var dmg = max(5, p - e + 6)
 		enemy_hp -= dmg
@@ -373,6 +525,7 @@ func _on_fight() -> void:
 		var dmg = max(3, e - p + 4)
 		PlayerStats.take_damage(dmg)
 		_refresh_hp()
+		_refresh_potion_btn()
 		if not PlayerStats.is_alive():
 			fight_btn.disabled = true
 			desc_label.text = "Your strength fails. The darkness takes you."
@@ -382,9 +535,18 @@ func _on_fight() -> void:
 func _combat_victory() -> void:
 	fight_btn.visible   = false
 	enemy_label.visible = false
+	var pb = action_area.get_node_or_null("PotionBtn")
+	if pb: pb.queue_free()
 	PlayerStats.combat_wins += 1
-	var luck = fate.effect.get("reward_luck", 0)
-	if luck > 0: PlayerStats.add_luck(luck)
+	var luck_r = fate.effect.get("reward_luck", 0)
+	if luck_r > 0: PlayerStats.add_luck(luck_r)
+	var gold_r = fate.effect.get("gold_reward", 0)
+	if PlayerStats.is_married() and PlayerStats.partner.get("bonus_type", "") == "adventurer":
+		gold_r += 5
+	if gold_r > 0:
+		PlayerStats.earn_gold(gold_r)
+		desc_label.text += "\n+%dg" % gold_r
+	_refresh_hp()
 	if is_win_fight:
 		desc_label.text = "You have defeated Satan himself. Hell bows at your feet."
 		await get_tree().create_timer(2.5).timeout
