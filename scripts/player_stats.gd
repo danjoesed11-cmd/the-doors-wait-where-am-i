@@ -48,6 +48,9 @@ func advance_round() -> void:
 
 func _partner_round_effect() -> void:
 	if partner.is_empty(): return
+	# Partner HP regen +2 per round
+	var mhp = partner.get("max_hp", 65)
+	partner["hp"] = min(mhp, partner.get("hp", mhp) + 2)
 	var bond = get_partner_bond()
 	var tier = 1 if bond < 75 else (2 if bond < 100 else 3)
 	match partner.get("bonus_type", ""):
@@ -81,7 +84,9 @@ func is_married() -> bool:
 
 func marry(p: Dictionary) -> void:
 	partner = p.duplicate()
-	partner["bond"] = 50
+	partner["bond"]   = 50
+	partner["max_hp"] = 65
+	partner["hp"]     = 65
 	match partner.get("bonus_type", ""):
 		"scholar":    add_luck(3)
 		"adventurer": increase_max_hp(10)
@@ -89,6 +94,29 @@ func marry(p: Dictionary) -> void:
 
 func get_partner_bond() -> int:
 	return partner.get("bond", 50)
+
+func get_partner_hp() -> int:
+	return partner.get("hp", partner.get("max_hp", 65))
+
+func get_partner_max_hp() -> int:
+	return partner.get("max_hp", 65)
+
+func partner_take_damage(amount: int) -> void:
+	if partner.is_empty(): return
+	partner["hp"] = max(0, partner.get("hp", 65) - amount)
+	emit_signal("stats_changed")
+
+func heal_partner_with_potion() -> bool:
+	if partner.is_empty(): return false
+	var mhp = partner.get("max_hp", 65)
+	if partner.get("hp", mhp) >= mhp: return false
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv or inv.heal_count <= 0: return false
+	inv.heal_count -= 1
+	inv.emit_signal("inventory_changed")
+	partner["hp"] = min(mhp, partner.get("hp", 0) + 40)
+	emit_signal("stats_changed")
+	return true
 
 func increase_partner_bond(amount: int) -> void:
 	if partner.is_empty(): return

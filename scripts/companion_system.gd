@@ -44,8 +44,21 @@ const TYPE_COLORS = {
 	"scout":   Color(0.95, 0.75, 0.1),
 }
 
+const TYPE_MAX_HP = {
+	"fighter": 80,
+	"healer":  50,
+	"mage":    45,
+	"scout":   55,
+}
+
 var companions: Array = []
 var _revive_used: bool = false
+
+func _init_hp(c: Dictionary) -> void:
+	if not c.has("max_hp"):
+		c["max_hp"] = TYPE_MAX_HP.get(c.get("type", ""), 60)
+	if not c.has("hp"):
+		c["hp"] = c["max_hp"]
 
 func reset() -> void:
 	companions.clear()
@@ -90,16 +103,20 @@ func get_random_companion() -> Dictionary:
 
 func add_companion(c: Dictionary) -> bool:
 	if companions.size() < MAX_COMPANIONS:
-		companions.append(c.duplicate())
+		var nc = c.duplicate()
+		_init_hp(nc)
+		companions.append(nc)
 		emit_signal("companions_changed")
 		return true
 	return false
 
 func replace_companion(slot: int, new_c: Dictionary) -> void:
+	var nc = new_c.duplicate()
+	_init_hp(nc)
 	if slot >= 0 and slot < companions.size():
-		companions[slot] = new_c.duplicate()
+		companions[slot] = nc
 	else:
-		companions.append(new_c.duplicate())
+		companions.append(nc)
 	emit_signal("companions_changed")
 
 func remove_companion(slot: int) -> void:
@@ -113,6 +130,27 @@ func has_companion(cname: String) -> bool:
 			return true
 	return false
 
+func heal_companion(slot: int) -> bool:
+	if slot < 0 or slot >= companions.size(): return false
+	var c  = companions[slot]
+	var mh = c.get("max_hp", 60)
+	if c.get("hp", mh) >= mh: return false
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv or inv.heal_count <= 0: return false
+	inv.heal_count -= 1
+	inv.emit_signal("inventory_changed")
+	c["hp"] = min(mh, c.get("hp", 0) + 40)
+	emit_signal("companions_changed")
+	return true
+
+func all_companions_take_damage(amount: int) -> void:
+	for c in companions:
+		var mh = c.get("max_hp", TYPE_MAX_HP.get(c.get("type",""), 60))
+		if not c.has("hp"): c["hp"] = mh
+		c["hp"] = max(0, c["hp"] - amount)
+	if not companions.is_empty():
+		emit_signal("companions_changed")
+
 func on_round_survived() -> void:
 	for c in companions:
 		c["relationship"] = min(100, c.get("relationship", 50) + 3)
@@ -120,6 +158,9 @@ func on_round_survived() -> void:
 			PlayerStats.heal(8 + (get_tier(c) - 1) * 6)
 		elif c.get("type") == "mage":
 			PlayerStats.add_luck(1)
+		# 2 HP regen per round
+		var mh = c.get("max_hp", TYPE_MAX_HP.get(c.get("type",""), 60))
+		c["hp"] = min(mh, c.get("hp", mh) + 2)
 	emit_signal("companions_changed")
 
 func on_damage_taken(amount: int) -> void:
@@ -169,5 +210,7 @@ func to_save() -> Dictionary:
 
 func from_save(d: Dictionary) -> void:
 	companions = d.get("companions", [])
+	for c in companions:
+		_init_hp(c)
 	_revive_used = d.get("revive_used", false)
 	emit_signal("companions_changed")

@@ -305,6 +305,24 @@ func _heal_slot() -> PanelContainer:
 		dim.add_theme_color_override("font_color", Color(0.22, 0.32, 0.22))
 		vbox.add_child(dim)
 
+	if PlayerStats.is_married() and Inventory.heal_count > 0:
+		var php  = PlayerStats.get_partner_hp()
+		var pmhp = PlayerStats.get_partner_max_hp()
+		if php < pmhp:
+			var p_btn := Button.new()
+			p_btn.text = "▲ PARTNER"
+			p_btn.custom_minimum_size = Vector2(0, 18)
+			p_btn.add_theme_font_size_override("font_size", 9)
+			p_btn.add_theme_color_override("font_color", Color(0.9, 0.55, 0.75))
+			var psty := StyleBoxFlat.new()
+			psty.bg_color     = Color(0.18, 0.06, 0.14)
+			psty.border_color = Color(0.8, 0.35, 0.6)
+			psty.set_border_width_all(1)
+			psty.set_corner_radius_all(3)
+			p_btn.add_theme_stylebox_override("normal", psty)
+			p_btn.pressed.connect(func(): PlayerStats.heal_partner_with_potion())
+			vbox.add_child(p_btn)
+
 	return panel
 
 func _companion_slot(index: int) -> PanelContainer:
@@ -343,6 +361,30 @@ func _companion_slot(index: int) -> PanelContainer:
 		rel_lbl.add_theme_font_size_override("font_size", 8)
 		rel_lbl.add_theme_color_override("font_color", tc)
 		vbox.add_child(rel_lbl)
+
+		var chp  = c.get("hp",  c.get("max_hp", 60))
+		var cmhp = c.get("max_hp", 60)
+		var pct  = float(chp) / float(max(1, cmhp))
+		var hcol = (Color(0.3, 0.85, 0.4) if pct > 0.75
+			else (Color(0.88, 0.78, 0.2) if pct > 0.5
+			else (Color(0.9, 0.48, 0.15) if pct > 0.25
+			else Color(0.9, 0.2, 0.2))))
+		var hp_lbl := Label.new()
+		hp_lbl.text = "HP %d/%d" % [chp, cmhp]
+		hp_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		hp_lbl.add_theme_font_size_override("font_size", 7)
+		hp_lbl.add_theme_color_override("font_color", hcol)
+		vbox.add_child(hp_lbl)
+
+		if chp < cmhp and Inventory.heal_count > 0:
+			var heal_btn := Button.new()
+			heal_btn.text = "HEAL"
+			heal_btn.custom_minimum_size = Vector2(0, 16)
+			heal_btn.add_theme_font_size_override("font_size", 8)
+			heal_btn.add_theme_color_override("font_color", Color(0.3, 0.92, 0.45))
+			var si = index
+			heal_btn.pressed.connect(func(): CompanionSystem.heal_companion(si))
+			vbox.add_child(heal_btn)
 	else:
 		style.bg_color     = Color(0.05, 0.03, 0.08, 0.6)
 		style.border_color = Color(0.2, 0.15, 0.2)
@@ -389,8 +431,10 @@ func _update_hud() -> void:
 	if partner_label:
 		if PlayerStats.is_married():
 			var bond = PlayerStats.get_partner_bond()
-			var bs = "♥♥♥" if bond >= 100 else ("♥♥" if bond >= 75 else "♥")
-			partner_label.text    = "%s  %s  —  Bond %d  %s" % [bs, PlayerStats.partner.get("name",""), bond, bs]
+			var bs   = "♥♥♥" if bond >= 100 else ("♥♥" if bond >= 75 else "♥")
+			var php  = PlayerStats.get_partner_hp()
+			var pmhp = PlayerStats.get_partner_max_hp()
+			partner_label.text    = "%s  %s  —  Bond %d  %s  |  HP %d/%d" % [bs, PlayerStats.partner.get("name",""), bond, bs, php, pmhp]
 			partner_label.visible = true
 		else:
 			partner_label.visible = false

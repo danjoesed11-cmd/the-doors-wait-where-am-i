@@ -908,6 +908,10 @@ func _on_fight() -> void:
 		PlayerStats.take_damage(incoming)
 		_refresh_hp()
 		_refresh_potion_btn()
+		# Companions and partner share some of the punishment
+		CompanionSystem.all_companions_take_damage(max(1, incoming / 4))
+		if PlayerStats.is_married():
+			PlayerStats.partner_take_damage(max(1, incoming / 5))
 		if not PlayerStats.is_alive():
 			fight_btn.disabled = true
 			desc_label.text = "Your strength fails. The darkness takes you."
