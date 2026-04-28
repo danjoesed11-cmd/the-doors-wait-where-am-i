@@ -10,6 +10,7 @@ var fight_btn: Button
 var continue_btn: Button
 var action_area: VBoxContainer
 var _content: VBoxContainer
+var _scroll: ScrollContainer
 
 var fate = null
 var enemy_hp: int = 0
@@ -52,7 +53,8 @@ func _build_ui() -> void:
 	_refresh_hp()
 	hud.add_child(hp_label)
 
-	var scroll := ScrollContainer.new()
+	_scroll = ScrollContainer.new()
+	var scroll = _scroll
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.offset_top    = 64.0
 	scroll.offset_bottom = -240.0
@@ -316,9 +318,22 @@ func _handle_item() -> void:
 # ── VILLAGE / SHOP ────────────────────────────────────────────────────
 func _handle_village() -> void:
 	var vtype = fate.effect.get("village_type", "market")
+
+	# Push scroll area almost to the bottom so shop items have maximum room
+	_scroll.offset_bottom = -75.0
+	action_area.offset_top = -70.0
+
+	# Hide the large art block (saves ~180px) and shrink label min sizes
+	for c in _content.get_children():
+		if c is FateArt:
+			c.visible = false
+			c.custom_minimum_size = Vector2(0, 0)
+	desc_label.custom_minimum_size   = Vector2(0, 30)
+	flavor_label.custom_minimum_size = Vector2(0, 30)
+
 	var shop_box := VBoxContainer.new()
 	shop_box.add_theme_constant_override("separation", 6)
-	_content.add_child(shop_box)   # goes into the scroll area — never clips
+	_content.add_child(shop_box)
 	continue_btn.visible = true
 	_fill_shop(shop_box, vtype)
 
