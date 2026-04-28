@@ -52,6 +52,35 @@ func reset() -> void:
 	_revive_used = false
 	emit_signal("companions_changed")
 
+func get_tier(c: Dictionary) -> int:
+	var rel = c.get("relationship", 50)
+	if rel >= 100: return 3
+	if rel >= 75:  return 2
+	return 1
+
+func _get_companion(cname: String) -> Dictionary:
+	for c in companions:
+		if c.get("name") == cname:
+			return c
+	return {}
+
+func give_item_to(slot: int) -> bool:
+	if slot < 0 or slot >= companions.size(): return false
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv or inv.heal_count <= 0: return false
+	inv.heal_count -= 1
+	inv.emit_signal("inventory_changed")
+	companions[slot]["relationship"] = min(100, companions[slot].get("relationship", 50) + 18)
+	emit_signal("companions_changed")
+	return true
+
+func give_gold_to(slot: int, amount: int) -> bool:
+	if slot < 0 or slot >= companions.size(): return false
+	if not PlayerStats.spend_gold(amount): return false
+	companions[slot]["relationship"] = min(100, companions[slot].get("relationship", 50) + 12)
+	emit_signal("companions_changed")
+	return true
+
 func get_random_companion() -> Dictionary:
 	var current = companions.map(func(c): return c.get("name", ""))
 	var pool = COMPANION_POOL.filter(func(c): return c["name"] not in current)
@@ -86,9 +115,9 @@ func has_companion(cname: String) -> bool:
 
 func on_round_survived() -> void:
 	for c in companions:
-		c["relationship"] = min(100, c.get("relationship", 50) + 4)
+		c["relationship"] = min(100, c.get("relationship", 50) + 3)
 		if c.get("name") == "Sister Mara":
-			PlayerStats.heal(10)
+			PlayerStats.heal(8 + (get_tier(c) - 1) * 6)
 		elif c.get("type") == "mage":
 			PlayerStats.add_luck(1)
 	emit_signal("companions_changed")
@@ -102,24 +131,26 @@ func on_damage_taken(amount: int) -> void:
 func get_combat_bonus() -> int:
 	var bonus = 0
 	for c in companions:
+		var t = get_tier(c)
 		match c.get("name", ""):
-			"Sir Aldric":      bonus += 8
-			"Zara the Blade":  bonus += 6
-			"The Iron Wolf":   bonus += 10
+			"Sir Aldric":     bonus += 8  + (t - 1) * 4
+			"Zara the Blade": bonus += 6  + (t - 1) * 3
+			"The Iron Wolf":  bonus += 10 + (t - 1) * 5
 			_:
 				if c.get("type") == "mage":
-					bonus += 2
+					bonus += 2 + (t - 1)
 	return bonus
 
 func get_trap_reduction() -> float:
 	for c in companions:
 		if c.get("type") == "scout":
-			return 0.30
+			return 0.20 + get_tier(c) * 0.10
 	return 0.0
 
 func get_dodge_bonus() -> int:
-	if has_companion("Shadow Fox"):
-		return 5
+	var c = _get_companion("Shadow Fox")
+	if not c.is_empty():
+		return 5 + (get_tier(c) - 1) * 3
 	return 0
 
 func check_revive() -> bool:

@@ -321,9 +321,11 @@ func _companion_slot(index: int) -> PanelContainer:
 		n_lbl.add_theme_color_override("font_color", Color(0.88, 0.82, 0.72))
 		vbox.add_child(n_lbl)
 
-		var rel = c.get("relationship", 50)
+		var rel  = c.get("relationship", 50)
+		var tier = CompanionSystem.get_tier(c)
 		var rel_lbl := Label.new()
-		rel_lbl.text = _rel_label(rel)
+		var stars = "" if tier == 1 else ("  ★★" if tier == 3 else "  ★")
+		rel_lbl.text = _rel_label(rel) + stars
 		rel_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		rel_lbl.add_theme_font_size_override("font_size", 8)
 		rel_lbl.add_theme_color_override("font_color", tc)
@@ -353,6 +355,7 @@ const _HINTS = [
 	["Something glows faintly.", "A scent of herbs.", "Faint warmth.", "Glass. Liquid. Something."],
 	["Torchlight and voices.", "You smell bread and ale.", "The sound of commerce.", "Distant laughter beyond."],
 	["A familiar warmth.", "Someone watches you kindly.", "Your name, spoken gently.", "You are not alone here."],
+	["A warmth that isn't a trap.", "Voices you recognise.", "Someone saved a seat.", "The dark feels smaller."],
 ]
 
 func _hint_for_fate(fate) -> String:
@@ -372,7 +375,9 @@ func _update_hud() -> void:
 	if hp_label:     hp_label.text     = "HP  %d/%d  " % [PlayerStats.hp, PlayerStats.max_hp]
 	if partner_label:
 		if PlayerStats.is_married():
-			partner_label.text    = "♥  %s is with you  ♥" % PlayerStats.partner.get("name", "")
+			var bond = PlayerStats.get_partner_bond()
+			var bs = "♥♥♥" if bond >= 100 else ("♥♥" if bond >= 75 else "♥")
+			partner_label.text    = "%s  %s  —  Bond %d  %s" % [bs, PlayerStats.partner.get("name",""), bond, bs]
 			partner_label.visible = true
 		else:
 			partner_label.visible = false

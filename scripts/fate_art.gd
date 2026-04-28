@@ -28,6 +28,7 @@ func _draw() -> void:
 		8: _draw_item(w, h, cx, cy)
 		9: _draw_village_scene(w, h, cx, cy)
 		10: _draw_wedding_scene(w, h, cx, cy)
+		11: _draw_camp_scene(w, h, cx, cy)
 
 func _poly(pts: Array, c: Color) -> void:
 	draw_colored_polygon(PackedVector2Array(pts), c)
@@ -670,6 +671,35 @@ func _draw_wedding_scene(w, h, cx, cy):
 		draw_line(Vector2(cx3,h*0.8),Vector2(cx3,h*0.45),Color(0.78,0.7,0.58),h*0.022)
 		_poly([Vector2(cx3-h*0.03,h*0.45),Vector2(cx3,h*0.32),Vector2(cx3+h*0.03,h*0.45)],Color(0.92,0.72,0.22,0.88))
 		draw_circle(Vector2(cx3,h*0.42),h*0.06,Color(0.95,0.78,0.3,0.2))
+
+func _draw_camp_scene(w, h, cx, cy):
+	draw_rect(Rect2(0,0,w,h), Color(0.1,0.08,0.04,0.45))
+	draw_rect(Rect2(0, h*0.75, w, h*0.25), Color(0.12,0.09,0.05))
+	# Fire glow on ground
+	_oval(Vector2(cx, h*0.72), h*0.32, h*0.06, Color(0.88,0.45,0.06,0.22))
+	# Log base
+	_poly([Vector2(cx-h*0.22,h*0.74),Vector2(cx+h*0.22,h*0.74),Vector2(cx+h*0.18,h*0.78),Vector2(cx-h*0.18,h*0.78)], Color(0.28,0.17,0.08))
+	_poly([Vector2(cx-h*0.12,h*0.71),Vector2(cx-h*0.2,h*0.79),Vector2(cx+h*0.2,h*0.79),Vector2(cx+h*0.12,h*0.71)], Color(0.22,0.13,0.06))
+	# Flames
+	for i in range(5):
+		var fx = cx - h*0.12 + i*h*0.06
+		var fh = h*(0.22+[0.06,0.12,0.16,0.1,0.05][i])
+		_poly([Vector2(fx-h*0.03,h*0.74),Vector2(fx,h*0.74-fh),Vector2(fx+h*0.03,h*0.74)], Color(0.9,0.42+i*0.03,0.05,0.88))
+	_poly([Vector2(cx-h*0.05,h*0.74),Vector2(cx,h*0.52),Vector2(cx+h*0.05,h*0.74)], Color(1,0.82,0.22,0.82))
+	# Embers
+	for em in [[-0.06,-0.08],[-0.14,-0.04],[0.04,-0.12],[0.12,-0.06]]:
+		draw_circle(Vector2(cx+em[0]*h, h*0.74+em[1]*h), 2.5, Color(1,0.7,0.2,0.7))
+	# Sitting figures around fire
+	var positions = [cx - h*0.38, cx + h*0.35]
+	for fx2 in positions:
+		# Body (hunched sitting)
+		_oval(Vector2(fx2, h*0.62), h*0.07, h*0.07, Color(0.55,0.48,0.4))
+		_poly([Vector2(fx2-h*0.07,h*0.68),Vector2(fx2+h*0.07,h*0.68),Vector2(fx2+h*0.06,h*0.76),Vector2(fx2-h*0.06,h*0.76)], Color(0.35,0.28,0.22))
+		# Legs on ground
+		draw_line(Vector2(fx2-h*0.05,h*0.76),Vector2(fx2-h*0.12,h*0.8), Color(0.35,0.28,0.22), h*0.04)
+		draw_line(Vector2(fx2+h*0.05,h*0.76),Vector2(fx2+h*0.12,h*0.8), Color(0.35,0.28,0.22), h*0.04)
+	# Warm glow atmosphere
+	_oval(Vector2(cx,h*0.62), h*0.5, h*0.36, Color(0.88,0.5,0.1,0.07))
 
 func _draw_human_silhouette(w, h, cx, cy, col: Color):
 	draw_circle(Vector2(cx,cy-h*0.28), h*0.13, col)

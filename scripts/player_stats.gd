@@ -47,15 +47,16 @@ func advance_round() -> void:
 	emit_signal("stats_changed")
 
 func _partner_round_effect() -> void:
-	if partner.is_empty():
-		return
+	if partner.is_empty(): return
+	var bond = get_partner_bond()
+	var tier = 1 if bond < 75 else (2 if bond < 100 else 3)
 	match partner.get("bonus_type", ""):
 		"healer":
 			if round_number % 3 == 0:
-				heal(15)
+				heal(10 + tier * 5)
 		"scholar":
 			if round_number % 5 == 0:
-				add_luck(1)
+				add_luck(tier)
 
 func add_luck(amount: int) -> void:
 	luck = clamp(luck + amount, -5, 25)
@@ -80,10 +81,34 @@ func is_married() -> bool:
 
 func marry(p: Dictionary) -> void:
 	partner = p.duplicate()
+	partner["bond"] = 50
 	match partner.get("bonus_type", ""):
 		"scholar":    add_luck(3)
 		"adventurer": increase_max_hp(10)
 	emit_signal("stats_changed")
+
+func get_partner_bond() -> int:
+	return partner.get("bond", 50)
+
+func increase_partner_bond(amount: int) -> void:
+	if partner.is_empty(): return
+	partner["bond"] = min(100, get_partner_bond() + amount)
+	emit_signal("stats_changed")
+
+func give_potion_to_partner() -> bool:
+	if partner.is_empty(): return false
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv or inv.heal_count <= 0: return false
+	inv.heal_count -= 1
+	inv.emit_signal("inventory_changed")
+	increase_partner_bond(20)
+	return true
+
+func give_gold_to_partner(amount: int) -> bool:
+	if partner.is_empty(): return false
+	if not spend_gold(amount): return false
+	increase_partner_bond(15)
+	return true
 
 func get_combat_power() -> int:
 	var power = 10 + (combat_wins * 2) + luck
@@ -92,5 +117,7 @@ func get_combat_power() -> int:
 	if inv: power += inv.get_damage_bonus() + inv.get_weapon_luck_bonus(luck)
 	if cs:  power += cs.get_combat_bonus()
 	if is_married() and partner.get("bonus_type", "") == "fighter":
-		power += 8
+		var bond = get_partner_bond()
+		var tier = 1 if bond < 75 else (2 if bond < 100 else 3)
+		power += 8 + (tier - 1) * 4
 	return power

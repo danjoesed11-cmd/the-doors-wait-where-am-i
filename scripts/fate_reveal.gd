@@ -18,12 +18,12 @@ var enemy_power: int = 0
 var is_win_fight: bool = false
 var _is_first_strike: bool = false
 
-const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE"]
+const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE","COMPANION CAMP"]
 const TYPE_COLORS = [
 	Color(0.9,0.15,0.15), Color(1.0,0.85,0.2),  Color(0.9,0.5,0.1),
 	Color(0.7,0.2,0.7),   Color(0.2,0.8,0.4),   Color(0.4,0.7,0.9),
 	Color(0.95,0.6,0.1),  Color(0.3,0.9,0.6),   Color(0.2,0.85,0.5),
-	Color(0.82,0.68,0.3), Color(0.95,0.55,0.75),
+	Color(0.82,0.68,0.3), Color(0.95,0.55,0.75), Color(0.88,0.65,0.3),
 ]
 
 func _ready() -> void:
@@ -183,6 +183,8 @@ func _apply_fate() -> void:
 			_handle_village()
 		FateSystem.FateType.MARRIAGE:
 			_handle_marriage()
+		FateSystem.FateType.COMPANION_INTERACT:
+			_handle_companion_interact()
 
 # ── TRAP ──────────────────────────────────────────────────────────────
 func _handle_trap() -> void:
@@ -492,6 +494,169 @@ func _handle_marriage() -> void:
 	decline_btn.add_theme_color_override("font_color", Color(0.5, 0.42, 0.5))
 	decline_btn.pressed.connect(_on_continue)
 	action_area.add_child(decline_btn)
+
+# ── COMPANION INTERACT ────────────────────────────────────────────────
+func _handle_companion_interact() -> void:
+	_scroll.offset_bottom = -75.0
+	action_area.offset_top = -70.0
+	for c in _content.get_children():
+		if c is FateArt:
+			c.visible = false
+			c.custom_minimum_size = Vector2(0, 0)
+	desc_label.custom_minimum_size   = Vector2(0, 30)
+	flavor_label.custom_minimum_size = Vector2(0, 30)
+	var interact_box := VBoxContainer.new()
+	interact_box.add_theme_constant_override("separation", 8)
+	_content.add_child(interact_box)
+	_rebuild_interact(interact_box)
+	continue_btn.visible = true
+
+func _rebuild_interact(box: VBoxContainer) -> void:
+	for c in box.get_children(): c.queue_free()
+	await get_tree().process_frame
+	for i in range(CompanionSystem.companions.size()):
+		_add_companion_card(box, i, CompanionSystem.companions[i])
+	if PlayerStats.is_married():
+		_add_partner_card(box)
+	if box.get_child_count() == 0:
+		var lbl := Label.new()
+		lbl.text = "No one to share this moment with — yet."
+		lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		lbl.add_theme_font_size_override("font_size", 14)
+		lbl.add_theme_color_override("font_color", Color(0.55, 0.5, 0.45))
+		box.add_child(lbl)
+
+func _add_companion_card(box: VBoxContainer, slot: int, c: Dictionary) -> void:
+	var tc   = CompanionSystem.type_color(c.get("type", ""))
+	var rel  = c.get("relationship", 50)
+	var tier = CompanionSystem.get_tier(c)
+	var tier_str = "" if tier == 1 else ("  ★ Tier %d" % tier)
+
+	var name_lbl := Label.new()
+	name_lbl.text = "%s  —  %s  —  ♥ %d/100%s" % [c.get("name","?"), c.get("type","").to_upper(), rel, tier_str]
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_color_override("font_color", tc)
+	box.add_child(name_lbl)
+
+	var passive_lbl := Label.new()
+	passive_lbl.text = c.get("passive", "")
+	passive_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	passive_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	passive_lbl.add_theme_font_size_override("font_size", 10)
+	passive_lbl.add_theme_color_override("font_color", Color(0.6, 0.58, 0.5))
+	box.add_child(passive_lbl)
+
+	if tier >= 2:
+		var tier_lbl := Label.new()
+		tier_lbl.text = "★★ MAX BOND — passives at full strength!" if tier == 3 else "★ Tier 2 — passives strengthened!"
+		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tier_lbl.add_theme_font_size_override("font_size", 10)
+		tier_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2) if tier == 3 else Color(0.85, 0.72, 0.2))
+		box.add_child(tier_lbl)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 8)
+	box.add_child(btn_row)
+
+	var can_potion = Inventory.heal_count > 0
+	var p_btn := Button.new()
+	p_btn.text = "Give Potion  (+18♥)" if can_potion else "No Potions"
+	p_btn.disabled = not can_potion
+	p_btn.custom_minimum_size = Vector2(0, 36)
+	p_btn.add_theme_font_size_override("font_size", 11)
+	p_btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
+	var si = slot; var br = box
+	p_btn.pressed.connect(func():
+		if CompanionSystem.give_item_to(si):
+			_refresh_hp(); _rebuild_interact(br)
+	)
+	btn_row.add_child(p_btn)
+
+	var can_gold = PlayerStats.gold >= 20
+	var g_btn := Button.new()
+	g_btn.text = "Give 20g  (+12♥)" if can_gold else "Need 20g"
+	g_btn.disabled = not can_gold
+	g_btn.custom_minimum_size = Vector2(0, 36)
+	g_btn.add_theme_font_size_override("font_size", 11)
+	g_btn.add_theme_color_override("font_color", Color(0.92, 0.78, 0.2))
+	var si2 = slot; var br2 = box
+	g_btn.pressed.connect(func():
+		if CompanionSystem.give_gold_to(si2, 20):
+			_refresh_hp(); _rebuild_interact(br2)
+	)
+	btn_row.add_child(g_btn)
+
+	var sep := Label.new()
+	sep.text = "—  —  —"
+	sep.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sep.add_theme_font_size_override("font_size", 10)
+	sep.add_theme_color_override("font_color", Color(0.28, 0.22, 0.28))
+	box.add_child(sep)
+
+func _add_partner_card(box: VBoxContainer) -> void:
+	var p    = PlayerStats.partner
+	var bond = PlayerStats.get_partner_bond()
+	var tc   = Color(0.95, 0.55, 0.75)
+	var tier = 1 if bond < 75 else (2 if bond < 100 else 3)
+	var tier_str = "" if tier == 1 else ("  ♥♥♥ Max Bond" if tier == 3 else "  ♥♥ Deep Bond")
+
+	var name_lbl := Label.new()
+	name_lbl.text = "♥  %s  —  %s  —  Bond: %d/100%s" % [p.get("name","?"), p.get("bonus_type","").to_upper(), bond, tier_str]
+	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_lbl.add_theme_font_size_override("font_size", 13)
+	name_lbl.add_theme_color_override("font_color", tc)
+	box.add_child(name_lbl)
+
+	var bonus_lbl := Label.new()
+	bonus_lbl.text = p.get("bonus_desc", "")
+	bonus_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	bonus_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	bonus_lbl.add_theme_font_size_override("font_size", 10)
+	bonus_lbl.add_theme_color_override("font_color", Color(0.78, 0.62, 0.78))
+	box.add_child(bonus_lbl)
+
+	if tier >= 2:
+		var tier_lbl := Label.new()
+		tier_lbl.text = "♥♥♥ Eternal Bond — maximum strength reached" if tier == 3 else "♥♥ Deep Bond — enhanced passives active"
+		tier_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		tier_lbl.add_theme_font_size_override("font_size", 10)
+		tier_lbl.add_theme_color_override("font_color", Color(1.0, 0.75, 0.88) if tier == 3 else Color(0.92, 0.6, 0.78))
+		box.add_child(tier_lbl)
+
+	var btn_row := HBoxContainer.new()
+	btn_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btn_row.add_theme_constant_override("separation", 8)
+	box.add_child(btn_row)
+
+	var can_potion = Inventory.heal_count > 0
+	var p_btn := Button.new()
+	p_btn.text = "Give Potion  (+20♥)" if can_potion else "No Potions"
+	p_btn.disabled = not can_potion
+	p_btn.custom_minimum_size = Vector2(0, 36)
+	p_btn.add_theme_font_size_override("font_size", 11)
+	p_btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
+	var br3 = box
+	p_btn.pressed.connect(func():
+		if PlayerStats.give_potion_to_partner():
+			_refresh_hp(); _rebuild_interact(br3)
+	)
+	btn_row.add_child(p_btn)
+
+	var can_gold = PlayerStats.gold >= 30
+	var g_btn := Button.new()
+	g_btn.text = "Give 30g  (+15♥)" if can_gold else "Need 30g"
+	g_btn.disabled = not can_gold
+	g_btn.custom_minimum_size = Vector2(0, 36)
+	g_btn.add_theme_font_size_override("font_size", 11)
+	g_btn.add_theme_color_override("font_color", Color(0.92, 0.78, 0.2))
+	var br4 = box
+	g_btn.pressed.connect(func():
+		if PlayerStats.give_gold_to_partner(30):
+			_refresh_hp(); _rebuild_interact(br4)
+	)
+	btn_row.add_child(g_btn)
 
 # ── COMBAT ────────────────────────────────────────────────────────────
 func _start_combat(effect: Dictionary, win_fight: bool) -> void:
