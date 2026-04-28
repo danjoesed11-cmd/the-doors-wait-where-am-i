@@ -286,11 +286,11 @@ func _register_fates() -> void:
 			"bonus_desc": "Heals you 15 HP every 3 rounds"
 		}))
 	all_fates.append(FateData.new("marriage_darian", FateType.MARRIAGE,
-		"THE WARRIOR", "A scarred fighter sharpens a blade beside the door. They stand as you enter.",
+		"THE WARRIOR", "A scarred fighter sharpens a blade beside the door. She stands as you enter, eyes level.",
 		"\"Been waiting for someone worth fighting beside.\"",
 		4, -1, 5, {
-			"partner_name": "Darian", "bonus_type": "fighter",
-			"partner_desc": "Darian has survived longer than anyone in the corridors. They know things about staying alive that cannot be taught.",
+			"partner_name": "Daria", "bonus_type": "fighter",
+			"partner_desc": "Daria has survived longer than anyone in these corridors. She knows things about staying alive that cannot be taught.",
 			"partner_quote": "Side by side. That's the only way.",
 			"bonus_desc": "+8 combat power, always"
 		}))
@@ -304,11 +304,11 @@ func _register_fates() -> void:
 			"bonus_desc": "+3 luck now, +1 luck every 5 rounds"
 		}))
 	all_fates.append(FateData.new("marriage_kael", FateType.MARRIAGE,
-		"THE ADVENTURER", "A grinning figure leans against the doorframe as if they own the place.",
+		"THE ADVENTURER", "A grinning woman leans against the doorframe as if she owns the place.",
 		"\"You're the first interesting person I've met in a hundred doors.\"",
 		3, -1, 5, {
-			"partner_name": "Kael", "bonus_type": "adventurer",
-			"partner_desc": "Kael has made a career of finding treasure in terrible places. They have a talent for surviving the unsurvivable.",
+			"partner_name": "Kaela", "bonus_type": "adventurer",
+			"partner_desc": "Kaela has made a career of finding treasure in terrible places. She has a talent for surviving the unsurvivable and making it look easy.",
 			"partner_quote": "Let's see what's behind the next one.",
 			"bonus_desc": "+10 max HP now, +5 bonus gold from every combat"
 		}))
