@@ -53,17 +53,17 @@ func _register_fates() -> void:
 		"DEAL BROKEN", "You made a pact you could not honour. The creditor arrives.",
 		"The fine print always gets you.", 25, -1, 1))
 
-	# ── WIN (round 40+) ────────────────────────────────────────────────────
+	# ── WIN (round 70+) ────────────────────────────────────────────────────
 	all_fates.append(FateData.new("win_defeat_satan", FateType.WIN,
-		"THE FINAL DOOR", "Satan himself stands in the chamber, wings spread wide. You raise your fists.",
-		"The battle shook the foundations of Hell. You walked out alone.",
-		40, -1, 5, {"requires_combat": true, "enemy_name": "Satan", "enemy_hp": 80, "enemy_power": 40, "gold_reward": 500}))
+		"THE DEVIL'S CHAMBER", "Satan himself fills the room. Wings wide. Eyes like burning stars. He has been waiting for you specifically.",
+		"The walls cracked. The floor split. Hell held its breath. You walked out alone.",
+		75, -1, 14, {"requires_combat": true, "enemy_name": "Satan", "enemy_hp": 160, "enemy_power": 58, "gold_reward": 800}))
 	all_fates.append(FateData.new("win_angel", FateType.WIN,
-		"ASCENSION", "Golden light floods the corridor. Wings unfurl from your back.",
-		"You were always meant for something greater. Heaven remembered.", 40, -1, 4))
+		"ASCENSION", "Golden light floods the corridor. Wings unfurl from your back. The doors are behind you forever.",
+		"You were always meant for something greater. Heaven remembered.", 70, -1, 5))
 	all_fates.append(FateData.new("win_royal", FateType.WIN,
-		"THE THRONE", "A crown rests on a velvet cushion. A kingdom awaits beyond the door.",
-		"Every door you survived was a test. You passed. Long live the king.", 40, -1, 4))
+		"THE THRONE", "A crown rests on a velvet cushion at the end of the longest corridor. A kingdom waits.",
+		"Every door you survived was a test. You passed all of them. Long live the king.", 70, -1, 5))
 
 	# ── COMBAT ─────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("combat_goblin", FateType.COMBAT,
@@ -122,6 +122,26 @@ func _register_fates() -> void:
 		"PLAGUE KNIGHT", "Rot and armor. The room smells of decay before the door opens.",
 		"It dies a little every moment. It would like company in that.", 22, -1, 5,
 		{"enemy_name": "Plague Knight", "enemy_hp": 140, "enemy_power": 42, "reward_luck": 4, "gold_reward": 70}))
+	all_fates.append(FateData.new("combat_void_titan", FateType.COMBAT,
+		"VOID TITAN", "A creature made entirely of compressed darkness. It does not have a face. It does not need one.",
+		"It hit the wall and the wall lost.", 32, -1, 5,
+		{"enemy_name": "Void Titan", "enemy_hp": 185, "enemy_power": 52, "reward_luck": 5, "gold_reward": 95}))
+	all_fates.append(FateData.new("combat_celestial_guard", FateType.COMBAT,
+		"CELESTIAL GUARD", "Golden armor. A weapon that hums with divine light. It was placed here to stop exactly you.",
+		"Heaven sent its second best. You met them.", 40, -1, 4,
+		{"enemy_name": "Celestial Guard", "enemy_hp": 220, "enemy_power": 60, "reward_luck": 5, "gold_reward": 130}))
+	all_fates.append(FateData.new("combat_soul_reaver", FateType.COMBAT,
+		"SOUL REAVER", "A figure with hollow eyes and too many arms. Each one holds a different stolen soul.",
+		"It has been collecting a very long time. You are next on the list.", 46, -1, 4,
+		{"enemy_name": "Soul Reaver", "enemy_hp": 260, "enemy_power": 65, "reward_luck": 6, "gold_reward": 165}))
+	all_fates.append(FateData.new("combat_satans_herald", FateType.COMBAT,
+		"SATAN'S HERALD", "A demon in formal dress. Red silk. White gloves. It has been sent ahead to assess you.",
+		"It reports back. Satan smiles.", 55, -1, 4,
+		{"enemy_name": "Satan's Herald", "enemy_hp": 300, "enemy_power": 72, "reward_luck": 6, "gold_reward": 220}))
+	all_fates.append(FateData.new("combat_death_itself", FateType.COMBAT,
+		"DEATH ITSELF", "Not the Reaper. Not a skeleton. The actual concept of death, standing in a doorway.",
+		"You fought death. This sentence should not be possible.", 62, -1, 3,
+		{"enemy_name": "Death", "enemy_hp": 350, "enemy_power": 78, "reward_luck": 8, "gold_reward": 280}))
 
 	# ── TRAP ───────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("trap_poison", FateType.TRAP,
@@ -183,6 +203,21 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("boon_celestial_pool", FateType.BOON,
 		"CELESTIAL POOL", "The water glows white-gold. You immerse yourself completely.",
 		"When you emerge, you feel like a different person. A better one.", 20, -1, 4, {"heal": 100, "max_hp": 30, "luck": 2}))
+	all_fates.append(FateData.new("boon_ancient_shrine", FateType.BOON,
+		"THE ANCIENT SHRINE", "A shrine older than the halls themselves. The offering bowl is full.",
+		"Whatever built this place left something behind. You take it gratefully.", 25, -1, 5, {"heal": 70, "luck": 3, "gold": 40}))
+	all_fates.append(FateData.new("boon_divine_nectar", FateType.BOON,
+		"DIVINE NECTAR", "A goblet of liquid light rests on a pedestal. It smells of nothing. It tastes of everything.",
+		"You feel your limits shift outward.", 35, -1, 4, {"heal": 80, "max_hp": 30, "luck": 2}))
+	all_fates.append(FateData.new("boon_godblood", FateType.BOON,
+		"GODBLOOD", "A vial of something that should not exist. Warm. Pulsing. Older than light.",
+		"You drink it anyway. Of course you do.", 45, -1, 3, {"heal": 120, "max_hp": 50, "luck": 4}))
+	all_fates.append(FateData.new("boon_void_heart", FateType.BOON,
+		"THE VOID HEART", "A crystallised piece of the void itself. It beats like a second heart in your palm.",
+		"You absorb it. Something vast and empty becomes part of you.", 55, -1, 3, {"heal": 100, "max_hp": 60, "luck": 5, "gold": 120}))
+	all_fates.append(FateData.new("boon_satans_treasury", FateType.BOON,
+		"SATAN'S TREASURY", "A door you weren't meant to find. Gold floor to ceiling. An oversight.",
+		"Hell's accountants are going to be furious.", 30, -1, 4, {"gold": 180, "luck": 2}))
 
 	# ── STORY ──────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("story_wanderer", FateType.STORY,
@@ -218,6 +253,24 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("story_prophecy", FateType.STORY,
 		"THE PROPHECY", "Words carved into every wall, ceiling and floor. All the same sentence.",
 		"You read it. You fold it into your memory. You move on.", 25, -1, 4, {"luck": 3}))
+	all_fates.append(FateData.new("story_empty_halls", FateType.STORY,
+		"THE EMPTY HALLS", "You walk for a long time before realising you haven't heard anything. No doors. No sounds. Just you.",
+		"The silence is not peaceful. It is waiting.", 20, -1, 4, {"luck": 2}))
+	all_fates.append(FateData.new("story_the_counter", FateType.STORY,
+		"THE COUNTER", "A mechanical device on the wall ticks upward every time a door opens. You check the number.",
+		"You stare at it for a long time. Then you keep walking.", 30, -1, 3, {"luck": 2}))
+	all_fates.append(FateData.new("story_hell_cartographer", FateType.STORY,
+		"THE CARTOGRAPHER", "A demon in spectacles sits at a drafting table, updating an enormous map.",
+		"\"You've gone further than most,\" it says without looking up. \"He knows.\"", 38, -1, 4, {"luck": 3}))
+	all_fates.append(FateData.new("story_before_the_end", FateType.STORY,
+		"THE LAST CALM", "A room with no threat. No reward. Just a chair, a lamp, and silence deep enough to think in.",
+		"You sit for a while. You know what comes next.", 50, -1, 3, {"luck": 4}))
+	all_fates.append(FateData.new("story_the_rumour", FateType.STORY,
+		"THE RUMOUR", "A scratched message in the door frame. Someone left it for whoever came this far.",
+		"\"He's real. He's waiting. And he's angry.\" Below it: \"Good luck.\"", 58, -1, 3, {"luck": 5}))
+	all_fates.append(FateData.new("story_satans_throne_room", FateType.STORY,
+		"THE ANTECHAMBER", "The air is hot. The stone is red. The next door is bigger than all the others.",
+		"Something on the other side is breathing. Slowly. Deliberately.", 65, -1, 4, {"luck": 5}))
 
 	# ── WEAPON ─────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("weapon_rack", FateType.WEAPON,
@@ -235,6 +288,12 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("weapon_divine", FateType.WEAPON,
 		"THE SACRED PEDESTAL", "A shaft of white light falls from nowhere onto a single weapon.",
 		"You were not supposed to find this. And yet.", 12, -1, 3, {"min_rarity": 5, "max_rarity": 6}))
+	all_fates.append(FateData.new("weapon_hellforge", FateType.WEAPON,
+		"THE HELLFORGE", "A forge that burns without fuel. Whatever it made last is still on the anvil.",
+		"The heat doesn't bother you anymore. You've been in worse rooms.", 28, -1, 4, {"min_rarity": 4, "max_rarity": 6}))
+	all_fates.append(FateData.new("weapon_gods_armoury", FateType.WEAPON,
+		"GOD'S ARMOURY", "A room you were never meant to reach. Weapons line every wall.",
+		"You take what you need. The lock on the door was already broken.", 45, -1, 3, {"min_rarity": 5, "max_rarity": 6}))
 
 	# ── COMPANION ──────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("companion_stranger", FateType.COMPANION,
@@ -361,7 +420,7 @@ func get_three_fates(round_num: int) -> Array:
 	var used_ids: Array = []
 	var death_used: bool = false
 
-	if round_num >= 40:
+	if round_num >= 70:
 		var win_pool = available.filter(func(f): return f.type == FateType.WIN)
 		if win_pool.size() > 0:
 			var w = _weighted_pick(win_pool, round_num)

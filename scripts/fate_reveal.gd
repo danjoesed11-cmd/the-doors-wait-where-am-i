@@ -930,7 +930,7 @@ func _combat_victory() -> void:
 		desc_label.text += "\n+%dg" % gold_r
 	_refresh_hp()
 	if is_win_fight:
-		desc_label.text = "You have defeated Satan himself. Hell bows at your feet."
+		desc_label.text = "You have defeated Satan himself.\n\nHell falls silent. The doors stop.\n\nYou are the first."
 		await get_tree().create_timer(2.5).timeout
 		GameManager.complete_fate({"outcome": "win", "ending": fate.id})
 	else:
