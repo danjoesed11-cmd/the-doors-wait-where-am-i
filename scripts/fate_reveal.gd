@@ -9,6 +9,7 @@ var enemy_label: Label
 var fight_btn: Button
 var continue_btn: Button
 var action_area: VBoxContainer
+var _content: VBoxContainer
 
 var fate = null
 var enemy_hp: int = 0
@@ -57,10 +58,11 @@ func _build_ui() -> void:
 	scroll.offset_bottom = -240.0
 	add_child(scroll)
 
-	var content := VBoxContainer.new()
-	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	content.add_theme_constant_override("separation", 14)
-	scroll.add_child(content)
+	_content = VBoxContainer.new()
+	_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_content.add_theme_constant_override("separation", 14)
+	scroll.add_child(_content)
+	var content = _content
 
 	type_label = Label.new()
 	type_label.text = "[ %s ]" % TYPE_NAMES[fate.type]
@@ -315,9 +317,8 @@ func _handle_item() -> void:
 func _handle_village() -> void:
 	var vtype = fate.effect.get("village_type", "market")
 	var shop_box := VBoxContainer.new()
-	shop_box.add_theme_constant_override("separation", 7)
-	action_area.add_child(shop_box)
-	action_area.move_child(shop_box, 0)
+	shop_box.add_theme_constant_override("separation", 6)
+	_content.add_child(shop_box)   # goes into the scroll area — never clips
 	continue_btn.visible = true
 	_fill_shop(shop_box, vtype)
 
