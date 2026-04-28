@@ -17,6 +17,8 @@ var enemy_hp: int = 0
 var enemy_power: int = 0
 var is_win_fight: bool = false
 var _is_first_strike: bool = false
+var _casino_result: String = ""
+var _casino_result_win: bool = false
 
 const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE","COMPANION CAMP"]
 const TYPE_COLORS = [
@@ -337,7 +339,12 @@ func _handle_village() -> void:
 	shop_box.add_theme_constant_override("separation", 6)
 	_content.add_child(shop_box)
 	continue_btn.visible = true
-	_fill_shop(shop_box, vtype)
+	if vtype == "casino":
+		_casino_result = ""
+		_casino_result_win = false
+		_rebuild_casino(shop_box)
+	else:
+		_fill_shop(shop_box, vtype)
 
 func _fill_shop(box: VBoxContainer, vtype: String) -> void:
 	for c in box.get_children():
@@ -430,6 +437,151 @@ func _shop_items(vtype: String) -> Array:
 				{"name": "Adventurer Pack  (+50 HP, +2 potions)", "cost": 68,
 				 "action": func(): PlayerStats.heal(50); Inventory.add_heal(2)},
 			]
+
+# ── CASINO ────────────────────────────────────────────────────────────
+func _rebuild_casino(box: VBoxContainer) -> void:
+	for c in box.get_children():
+		if c is Button: c.disabled = true
+		c.queue_free()
+	await get_tree().process_frame
+
+	var gold_lbl := Label.new()
+	gold_lbl.text = "YOUR GOLD:  %dg" % PlayerStats.gold
+	gold_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	gold_lbl.add_theme_font_size_override("font_size", 16)
+	gold_lbl.add_theme_color_override("font_color", Color(0.92, 0.78, 0.2))
+	box.add_child(gold_lbl)
+
+	if _casino_result != "":
+		var r_lbl := Label.new()
+		r_lbl.text = _casino_result
+		r_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		r_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		r_lbl.add_theme_font_size_override("font_size", 14)
+		r_lbl.add_theme_color_override("font_color",
+			Color(0.3, 0.95, 0.45) if _casino_result_win else Color(0.95, 0.32, 0.32))
+		box.add_child(r_lbl)
+
+	var games = [
+		{"name": "Coin Flip  —  30g",      "odds": "50/50  ·  win 30g or lose 30g",                    "cost": 30,  "fn": func(): _casino_flip(30, box)},
+		{"name": "High Stakes  —  80g",    "odds": "50/50  ·  win 80g or lose 80g",                    "cost": 80,  "fn": func(): _casino_flip(80, box)},
+		{"name": "Lucky Roll  —  35g",     "odds": "d20  ·  1-9: lose  ·  15-19: +70g  ·  20: +140g!","cost": 35,  "fn": func(): _casino_lucky_roll(box)},
+		{"name": "Weapon Crate  —  45g",   "odds": "Draw a mystery weapon  (min Rare, scales with round)","cost": 45,"fn": func(): _casino_weapon(box)},
+		{"name": "Potion Slots  —  25g",   "odds": "Spin  ·  40%: nothing  ·  35%: +2 pot  ·  25%: +5 pots!","cost": 25,"fn": func(): _casino_potions(box)},
+		{"name": "Health Gamble  —  55g",  "odds": "40%: +30 max HP  ·  60%: lose gold",               "cost": 55,  "fn": func(): _casino_health(box)},
+		{"name": "Devil's Wager  —  70g",  "odds": "50/50  ·  WIN: +70g +5 luck  ·  LOSE: -70g -2 luck","cost": 70, "fn": func(): _casino_devil(box)},
+	]
+
+	for g in games:
+		var can = PlayerStats.gold >= g["cost"]
+		var g_box := VBoxContainer.new()
+		g_box.add_theme_constant_override("separation", 2)
+		box.add_child(g_box)
+		var btn := Button.new()
+		btn.text = g["name"]
+		btn.custom_minimum_size = Vector2(0, 42)
+		btn.add_theme_font_size_override("font_size", 13)
+		btn.add_theme_color_override("font_color",
+			Color(0.92, 0.72, 0.15) if can else Color(0.42, 0.38, 0.3))
+		btn.disabled = not can
+		btn.pressed.connect(g["fn"])
+		g_box.add_child(btn)
+		var odds_lbl := Label.new()
+		odds_lbl.text = g["odds"]
+		odds_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		odds_lbl.add_theme_font_size_override("font_size", 10)
+		odds_lbl.add_theme_color_override("font_color", Color(0.55, 0.5, 0.4))
+		g_box.add_child(odds_lbl)
+
+func _casino_flip(bet: int, box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(bet): return
+	if randf() < 0.5:
+		PlayerStats.earn_gold(bet * 2)
+		_casino_result = "HEADS! You win %dg!" % bet
+		_casino_result_win = true
+	else:
+		_casino_result = "TAILS. You lose %dg." % bet
+		_casino_result_win = false
+	_refresh_hp(); _rebuild_casino(box)
+
+func _casino_lucky_roll(box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(35): return
+	var roll = randi() % 20 + 1
+	if roll <= 9:
+		_casino_result = "Rolled %d. Unlucky — lost 35g." % roll
+		_casino_result_win = false
+	elif roll <= 14:
+		PlayerStats.earn_gold(35)
+		_casino_result = "Rolled %d. Broke even — 35g back." % roll
+		_casino_result_win = true
+	elif roll <= 19:
+		PlayerStats.earn_gold(70)
+		_casino_result = "Rolled %d! You win 70g!" % roll
+		_casino_result_win = true
+	else:
+		PlayerStats.earn_gold(140)
+		_casino_result = "NATURAL 20!!! JACKPOT — 140g!!!"
+		_casino_result_win = true
+	_refresh_hp(); _rebuild_casino(box)
+
+func _casino_weapon(box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(45): return
+	var min_r = clamp(int(PlayerStats.round_number / 4), 1, 5)
+	var max_r = clamp(min_r + 2, min_r, 6)
+	var w = Inventory.get_random_weapon(min_r, max_r)
+	var rname = Inventory.rarity_name(w.get("rarity", 0))
+	if Inventory.add_weapon(w):
+		_casino_result = "Drew: %s  [%s  +%d DMG]!" % [w.get("name","?"), rname, w.get("damage",0)]
+	else:
+		var weakest = 0
+		for i in range(1, Inventory.weapons.size()):
+			if Inventory.weapons[i].get("damage",0) < Inventory.weapons[weakest].get("damage",0):
+				weakest = i
+		var old = Inventory.weapons[weakest].get("name","?")
+		Inventory.replace_weapon(weakest, w)
+		_casino_result = "Drew: %s  [%s  +%d]  —  replaced %s" % [w.get("name","?"), rname, w.get("damage",0), old]
+	_casino_result_win = true
+	_refresh_hp(); _rebuild_casino(box)
+
+func _casino_potions(box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(25): return
+	var roll = randi() % 10 + 1  # d10
+	if roll <= 4:
+		_casino_result = "Nothing. Lost 25g."
+		_casino_result_win = false
+	elif roll <= 7:
+		Inventory.add_heal(2)
+		_casino_result = "Won 2 potions!"
+		_casino_result_win = true
+	else:
+		Inventory.add_heal(5)
+		_casino_result = "JACKPOT — 5 potions!!!"
+		_casino_result_win = true
+	_refresh_hp(); _rebuild_casino(box)
+
+func _casino_health(box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(55): return
+	if randf() < 0.40:
+		PlayerStats.increase_max_hp(30)
+		_casino_result = "Lucky! +30 max HP!"
+		_casino_result_win = true
+	else:
+		_casino_result = "No luck. Lost 55g."
+		_casino_result_win = false
+	_refresh_hp(); _rebuild_casino(box)
+
+func _casino_devil(box: VBoxContainer) -> void:
+	if not PlayerStats.spend_gold(70): return
+	if randf() < 0.50:
+		PlayerStats.earn_gold(140)
+		PlayerStats.add_luck(5)
+		_casino_result = "The Devil smiles. +70g and +5 luck. For now."
+		_casino_result_win = true
+	else:
+		PlayerStats.add_luck(-2)
+		_casino_result = "The Devil laughs. Lost 70g and -2 luck."
+		_casino_result_win = false
+	_refresh_hp(); _rebuild_casino(box)
 
 func _upgrade_top_weapon(bonus: int) -> void:
 	if Inventory.weapons.is_empty(): return

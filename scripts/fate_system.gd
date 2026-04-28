@@ -274,6 +274,15 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("village_sage", FateType.VILLAGE,
 		"THE WANDERING SAGE", "A tattooed elder sits cross-legged, surrounded by floating texts.",
 		"\"Knowledge costs,\" he says. \"But ignorance costs more.\"", 8, -1, 5, {"village_type": "sage"}))
+	all_fates.append(FateData.new("village_casino", FateType.VILLAGE,
+		"THE GAMBLING DEN", "Torchlight, dice, and the sound of someone losing everything. A classic.",
+		"Fortune favours the bold. Or just the lucky. Same thing, sometimes.", 3, -1, 7, {"village_type": "casino"}))
+	all_fates.append(FateData.new("village_casino_palace", FateType.VILLAGE,
+		"THE GOLD PALACE", "Red curtains, candlelight, and a table that promises everything and owes you nothing.",
+		"The house always wins. Except when it doesn't.", 6, -1, 5, {"village_type": "casino"}))
+	all_fates.append(FateData.new("village_casino_pit", FateType.VILLAGE,
+		"THE DEVIL'S PIT", "Underground. No signs. Just torches and the unspoken agreement that what happens here stays here.",
+		"High risk. High reward. High chance of regretting this.", 10, -1, 4, {"village_type": "casino"}))
 
 	# ── MARRIAGE ───────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("marriage_elara", FateType.MARRIAGE,

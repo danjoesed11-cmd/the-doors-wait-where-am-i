@@ -610,6 +610,9 @@ func _draw_sword_art(w, h, cx, cy):
 	draw_circle(a2, h*0.045, Color(1,0.92,0.4,0.35))
 
 func _draw_village_scene(w, h, cx, cy):
+	if "casino" in fate_id:
+		_draw_casino_scene(w, h, cx, cy)
+		return
 	draw_rect(Rect2(0,0,w,h), Color(0.18,0.14,0.06,0.4))
 	# Ground
 	draw_rect(Rect2(0, h*0.72, w, h*0.28), Color(0.22,0.17,0.09))
@@ -671,6 +674,50 @@ func _draw_wedding_scene(w, h, cx, cy):
 		draw_line(Vector2(cx3,h*0.8),Vector2(cx3,h*0.45),Color(0.78,0.7,0.58),h*0.022)
 		_poly([Vector2(cx3-h*0.03,h*0.45),Vector2(cx3,h*0.32),Vector2(cx3+h*0.03,h*0.45)],Color(0.92,0.72,0.22,0.88))
 		draw_circle(Vector2(cx3,h*0.42),h*0.06,Color(0.95,0.78,0.3,0.2))
+
+func _draw_casino_scene(w, h, cx, cy):
+	draw_rect(Rect2(0,0,w,h), Color(0.1,0.04,0.06,0.5))
+	# Red curtains
+	_poly([Vector2(0,0),Vector2(w*0.16,0),Vector2(w*0.1,h),Vector2(0,h)], Color(0.32,0.05,0.08,0.75))
+	_poly([Vector2(w,0),Vector2(w-w*0.16,0),Vector2(w-w*0.1,h),Vector2(w,h)], Color(0.32,0.05,0.08,0.75))
+	# Curtain fold lines
+	for i in range(3):
+		var fx = w*0.04 + i*w*0.04
+		draw_line(Vector2(fx,0), Vector2(fx-w*0.02,h), Color(0.45,0.08,0.12,0.4), 1.2)
+		draw_line(Vector2(w-fx,0), Vector2(w-fx+w*0.02,h), Color(0.45,0.08,0.12,0.4), 1.2)
+	# Felt table (green)
+	_oval(Vector2(cx, cy+h*0.12), h*0.44, h*0.24, Color(0.08,0.28,0.12))
+	_oval(Vector2(cx, cy+h*0.12), h*0.40, h*0.20, Color(0.12,0.38,0.16))
+	draw_arc(Vector2(cx, cy+h*0.12), h*0.44, 0, TAU, 36, Color(0.22,0.14,0.06), h*0.022)
+	# Dice on table
+	var dice_data = [[cx-h*0.18, cy+h*0.04, h*0.058], [cx+h*0.06, cy, h*0.052], [cx-h*0.04, cy+h*0.14, h*0.048]]
+	for d in dice_data:
+		var dx = d[0]; var dy = d[1]; var ds = d[2]
+		draw_rect(Rect2(dx-ds, dy-ds, ds*2, ds*2), Color(0.94,0.90,0.84))
+		draw_rect(Rect2(dx-ds, dy-ds, ds*2, ds*2), Color(0.2,0.1,0.08), false, 1.5)
+		draw_circle(Vector2(dx, dy), ds*0.22, Color(0.12,0.06,0.06))
+	# Gold coins
+	for coin in [[-0.24,0.18],[-0.08,0.24],[0.2,0.12],[0.3,0.2]]:
+		_oval(Vector2(cx+coin[0]*h, cy+coin[1]*h), h*0.03, h*0.019, Color(0.9,0.72,0.14))
+		draw_arc(Vector2(cx+coin[0]*h, cy+coin[1]*h), h*0.028, 0, TAU, 12, Color(0.6,0.44,0.06), 1.0)
+	# Card on table
+	draw_rect(Rect2(cx+h*0.1, cy+h*0.04, h*0.09, h*0.13), Color(0.92,0.88,0.82))
+	draw_rect(Rect2(cx+h*0.1, cy+h*0.04, h*0.09, h*0.13), Color(0.5,0.06,0.06), false, 1.2)
+	draw_line(Vector2(cx+h*0.12, cy+h*0.06), Vector2(cx+h*0.17, cy+h*0.14), Color(0.72,0.08,0.08), 1.5)
+	# Candelabra
+	for cx2 in [cx-h*0.52, cx+h*0.52]:
+		draw_line(Vector2(cx2,h*0.78),Vector2(cx2,h*0.38), Color(0.62,0.52,0.32), h*0.018)
+		for arm in [-1.0, 0.0, 1.0]:
+			var ax = cx2 + arm*h*0.06
+			draw_line(Vector2(ax,h*0.5),Vector2(ax,h*0.36), Color(0.62,0.52,0.32), h*0.012)
+			_poly([Vector2(ax-h*0.02,h*0.36),Vector2(ax,h*0.24),Vector2(ax+h*0.02,h*0.36)], Color(0.92,0.72,0.22,0.9))
+			draw_circle(Vector2(ax,h*0.34), h*0.04, Color(0.9,0.6,0.18,0.2))
+	# Figures at table
+	for fx2 in [cx-h*0.38, cx+h*0.34]:
+		_oval(Vector2(fx2, cy-h*0.1), h*0.055, h*0.055, Color(0.55,0.45,0.38))
+		_poly([Vector2(fx2-h*0.06,cy-h*0.04),Vector2(fx2+h*0.06,cy-h*0.04),Vector2(fx2+h*0.06,cy+h*0.14),Vector2(fx2-h*0.06,cy+h*0.14)], Color(0.18,0.12,0.1))
+	# Warm glow
+	_oval(Vector2(cx, cy), h*0.48, h*0.42, Color(0.88,0.65,0.12,0.06))
 
 func _draw_camp_scene(w, h, cx, cy):
 	draw_rect(Rect2(0,0,w,h), Color(0.1,0.08,0.04,0.45))
