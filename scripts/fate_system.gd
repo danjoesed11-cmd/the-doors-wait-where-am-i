@@ -27,7 +27,7 @@ func _register_fates() -> void:
 	# ── DEATH ──────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("death_devoured", FateType.DEATH,
 		"DEVOURED", "Something in the dark tears you apart before you can scream.",
-		"The darkness had teeth. You never saw it coming.", 3, -1, 8))
+		"The darkness had teeth. You never saw it coming.", 3, -1, 2))
 	all_fates.append(FateData.new("death_fall", FateType.DEATH,
 		"THE FALL", "The floor gives way. You plummet into nothing.",
 		"They say you don't feel anything after the first impact.", 2, 12, 1))
@@ -36,22 +36,22 @@ func _register_fates() -> void:
 		"The trap was set centuries ago. It waited just for you.", 1, 10, 1))
 	all_fates.append(FateData.new("death_old_age", FateType.DEATH,
 		"OLD AGE", "You have wandered these halls for decades. Time caught you at last.",
-		"Generations passed. The doors never ended. You became dust.", 40, -1, 10))
+		"Generations passed. The doors never ended. You became dust.", 40, -1, 3))
 	all_fates.append(FateData.new("death_blade", FateType.DEATH,
 		"THE BLADE", "A hooded figure steps from the shadow. A knife catches the light.",
-		"You open the door. It smiles. Then nothing.", 4, -1, 6))
+		"You open the door. It smiles. Then nothing.", 4, -1, 2))
 	all_fates.append(FateData.new("death_drowned", FateType.DEATH,
 		"DROWNED", "The room floods instantly. There is no way out.",
 		"The water is cold. Impossibly cold.", 5, -1, 1))
 	all_fates.append(FateData.new("death_consumed", FateType.DEATH,
 		"CONSUMED", "A black mass fills the room from wall to wall. It is hungry.",
-		"It does not hate you. It simply needs to eat.", 8, -1, 7))
+		"It does not hate you. It simply needs to eat.", 8, -1, 2))
 	all_fates.append(FateData.new("death_petrified", FateType.DEATH,
 		"PETRIFIED", "Your legs stop. Then your hands. Then your breath. You become stone.",
-		"The next traveller will walk past without knowing what you were.", 15, -1, 6))
+		"The next traveller will walk past without knowing what you were.", 15, -1, 2))
 	all_fates.append(FateData.new("death_bargain_failed", FateType.DEATH,
 		"DEAL BROKEN", "You made a pact you could not honour. The creditor arrives.",
-		"The fine print always gets you.", 20, -1, 5))
+		"The fine print always gets you.", 20, -1, 2))
 
 	# ── WIN (round 40+) ────────────────────────────────────────────────────
 	all_fates.append(FateData.new("win_defeat_satan", FateType.WIN,
@@ -336,6 +336,7 @@ func get_three_fates(round_num: int) -> Array:
 
 	var picked: Array = []
 	var used_ids: Array = []
+	var death_used: bool = false
 
 	if round_num >= 40:
 		var win_pool = available.filter(func(f): return f.type == FateType.WIN)
@@ -345,8 +346,12 @@ func get_three_fates(round_num: int) -> Array:
 			used_ids.append(w.id)
 
 	for _i in range(3 - picked.size()):
-		var pool = available.filter(func(f): return f.id not in used_ids)
-		if round_num <= 2:
+		var pool = available.filter(func(f):
+			if f.id in used_ids: return false
+			if f.type == FateType.DEATH and death_used: return false
+			return true
+		)
+		if round_num <= 5:
 			var safe = pool.filter(func(f): return f.type != FateType.DEATH)
 			if safe.size() >= 2:
 				pool = safe
@@ -354,6 +359,8 @@ func get_three_fates(round_num: int) -> Array:
 		if chosen:
 			picked.append(chosen)
 			used_ids.append(chosen.id)
+			if chosen.type == FateType.DEATH:
+				death_used = true
 
 	picked.shuffle()
 	return picked
@@ -365,7 +372,7 @@ func _weighted_pick(pool: Array, round_num: int):
 	for fate in pool:
 		var w = fate.base_weight
 		if fate.type == FateType.DEATH:
-			w = int(w * (1.0 + round_num * 0.15))
+			w = int(w * (1.0 + round_num * 0.04))
 		elif fate.type == FateType.COMBAT:
 			w = int(w * (1.0 + round_num * 0.08))
 		weights.append(w)
