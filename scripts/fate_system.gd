@@ -57,7 +57,7 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("win_defeat_satan", FateType.WIN,
 		"THE DEVIL'S CHAMBER", "Satan himself fills the room. Wings wide. Eyes like burning stars. He has been waiting for you specifically.",
 		"The walls cracked. The floor split. Hell held its breath. You walked out alone.",
-		75, -1, 14, {"requires_combat": true, "enemy_name": "Satan", "enemy_hp": 160, "enemy_power": 58, "gold_reward": 800}))
+		75, -1, 14, {"requires_combat": true, "enemy_name": "Satan", "enemy_hp": 1200, "enemy_power": 58, "gold_reward": 800}))
 	all_fates.append(FateData.new("win_angel", FateType.WIN,
 		"ASCENSION", "Golden light floods the corridor. Wings unfurl from your back. The doors are behind you forever.",
 		"You were always meant for something greater. Heaven remembered.", 70, -1, 5))
