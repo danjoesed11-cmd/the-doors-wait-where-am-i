@@ -463,13 +463,13 @@ func _rebuild_casino(box: VBoxContainer) -> void:
 		box.add_child(r_lbl)
 
 	var games = [
-		{"name": "Coin Flip  —  30g",      "odds": "50/50  ·  win 30g or lose 30g",                    "cost": 30,  "fn": func(): _casino_flip(30, box)},
-		{"name": "High Stakes  —  80g",    "odds": "50/50  ·  win 80g or lose 80g",                    "cost": 80,  "fn": func(): _casino_flip(80, box)},
-		{"name": "Lucky Roll  —  35g",     "odds": "d20  ·  1-9: lose  ·  15-19: +70g  ·  20: +140g!","cost": 35,  "fn": func(): _casino_lucky_roll(box)},
-		{"name": "Weapon Crate  —  45g",   "odds": "Draw a mystery weapon  (min Rare, scales with round)","cost": 45,"fn": func(): _casino_weapon(box)},
-		{"name": "Potion Slots  —  25g",   "odds": "Spin  ·  40%: nothing  ·  35%: +2 pot  ·  25%: +5 pots!","cost": 25,"fn": func(): _casino_potions(box)},
-		{"name": "Health Gamble  —  55g",  "odds": "40%: +30 max HP  ·  60%: lose gold",               "cost": 55,  "fn": func(): _casino_health(box)},
-		{"name": "Devil's Wager  —  70g",  "odds": "50/50  ·  WIN: +70g +5 luck  ·  LOSE: -70g -2 luck","cost": 70, "fn": func(): _casino_devil(box)},
+		{"name": "Coin Flip  —  15g",      "odds": "50/50  ·  win 15g or lose 15g",                    "cost": 15,  "fn": func(): _casino_flip(15, box)},
+		{"name": "High Stakes  —  40g",    "odds": "50/50  ·  win 40g or lose 40g",                    "cost": 40,  "fn": func(): _casino_flip(40, box)},
+		{"name": "Lucky Roll  —  20g",     "odds": "d20  ·  1-9: lose  ·  15-19: +40g  ·  20: +80g!", "cost": 20,  "fn": func(): _casino_lucky_roll(box)},
+		{"name": "Weapon Crate  —  30g",   "odds": "Draw a mystery weapon  (min Rare, scales with round)","cost": 30,"fn": func(): _casino_weapon(box)},
+		{"name": "Potion Slots  —  12g",   "odds": "Spin  ·  40%: nothing  ·  35%: +2 pot  ·  25%: +5 pots!","cost": 12,"fn": func(): _casino_potions(box)},
+		{"name": "Health Gamble  —  35g",  "odds": "40%: +30 max HP  ·  60%: lose gold",               "cost": 35,  "fn": func(): _casino_health(box)},
+		{"name": "Devil's Wager  —  45g",  "odds": "50/50  ·  WIN: +45g +5 luck  ·  LOSE: -45g -2 luck","cost": 45, "fn": func(): _casino_devil(box)},
 	]
 
 	for g in games:
@@ -505,27 +505,27 @@ func _casino_flip(bet: int, box: VBoxContainer) -> void:
 	_refresh_hp(); _rebuild_casino(box)
 
 func _casino_lucky_roll(box: VBoxContainer) -> void:
-	if not PlayerStats.spend_gold(35): return
+	if not PlayerStats.spend_gold(20): return
 	var roll = randi() % 20 + 1
 	if roll <= 9:
-		_casino_result = "Rolled %d. Unlucky — lost 35g." % roll
+		_casino_result = "Rolled %d. Unlucky — lost 20g." % roll
 		_casino_result_win = false
 	elif roll <= 14:
-		PlayerStats.earn_gold(35)
-		_casino_result = "Rolled %d. Broke even — 35g back." % roll
+		PlayerStats.earn_gold(20)
+		_casino_result = "Rolled %d. Broke even — 20g back." % roll
 		_casino_result_win = true
 	elif roll <= 19:
-		PlayerStats.earn_gold(70)
-		_casino_result = "Rolled %d! You win 70g!" % roll
+		PlayerStats.earn_gold(40)
+		_casino_result = "Rolled %d! You win 40g!" % roll
 		_casino_result_win = true
 	else:
-		PlayerStats.earn_gold(140)
-		_casino_result = "NATURAL 20!!! JACKPOT — 140g!!!"
+		PlayerStats.earn_gold(80)
+		_casino_result = "NATURAL 20!!! JACKPOT — 80g!!!"
 		_casino_result_win = true
 	_refresh_hp(); _rebuild_casino(box)
 
 func _casino_weapon(box: VBoxContainer) -> void:
-	if not PlayerStats.spend_gold(45): return
+	if not PlayerStats.spend_gold(30): return
 	var min_r = clamp(int(PlayerStats.round_number / 4), 1, 5)
 	var max_r = clamp(min_r + 2, min_r, 6)
 	var w = Inventory.get_random_weapon(min_r, max_r)
@@ -544,10 +544,10 @@ func _casino_weapon(box: VBoxContainer) -> void:
 	_refresh_hp(); _rebuild_casino(box)
 
 func _casino_potions(box: VBoxContainer) -> void:
-	if not PlayerStats.spend_gold(25): return
+	if not PlayerStats.spend_gold(12): return
 	var roll = randi() % 10 + 1  # d10
 	if roll <= 4:
-		_casino_result = "Nothing. Lost 25g."
+		_casino_result = "Nothing. Lost 12g."
 		_casino_result_win = false
 	elif roll <= 7:
 		Inventory.add_heal(2)
@@ -560,26 +560,26 @@ func _casino_potions(box: VBoxContainer) -> void:
 	_refresh_hp(); _rebuild_casino(box)
 
 func _casino_health(box: VBoxContainer) -> void:
-	if not PlayerStats.spend_gold(55): return
+	if not PlayerStats.spend_gold(35): return
 	if randf() < 0.40:
 		PlayerStats.increase_max_hp(30)
 		_casino_result = "Lucky! +30 max HP!"
 		_casino_result_win = true
 	else:
-		_casino_result = "No luck. Lost 55g."
+		_casino_result = "No luck. Lost 35g."
 		_casino_result_win = false
 	_refresh_hp(); _rebuild_casino(box)
 
 func _casino_devil(box: VBoxContainer) -> void:
-	if not PlayerStats.spend_gold(70): return
+	if not PlayerStats.spend_gold(45): return
 	if randf() < 0.50:
-		PlayerStats.earn_gold(140)
+		PlayerStats.earn_gold(90)
 		PlayerStats.add_luck(5)
-		_casino_result = "The Devil smiles. +70g and +5 luck. For now."
+		_casino_result = "The Devil smiles. +45g and +5 luck. For now."
 		_casino_result_win = true
 	else:
 		PlayerStats.add_luck(-2)
-		_casino_result = "The Devil laughs. Lost 70g and -2 luck."
+		_casino_result = "The Devil laughs. Lost 45g and -2 luck."
 		_casino_result_win = false
 	_refresh_hp(); _rebuild_casino(box)
 
