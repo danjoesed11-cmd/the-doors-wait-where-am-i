@@ -5,10 +5,12 @@ const VP_Y  = 0.30
 const VP_HW = 0.13
 const VP_HH = 0.09
 
-var _t   : float = 0.0
-var _wks : Array = []
+var _t              : float  = 0.0
+var _wks            : Array  = []
+var _player_weapon  : String = ""
 
-func setup(companions: Array) -> void:
+func setup(companions: Array, weapons: Array = []) -> void:
+	_player_weapon = weapons[0].get("weapon_type", "") if not weapons.is_empty() else ""
 	_wks.clear()
 	_wks.append({"col": Color(0.92, 0.78, 0.22), "fx": 0.50, "fy": 0.88, "sc": 1.0, "po": 0.0})
 	for i in companions.size():
@@ -199,3 +201,62 @@ func _draw_fig(wd: Dictionary, W: float, H: float) -> void:
 
 	draw_circle(hd, hr, col)
 	draw_circle(hd + Vector2(hr * 0.30, hr * 0.05), hr * 0.24, col.darkened(0.62))
+
+	if sc >= 1.0 and not _player_weapon.is_empty():
+		_draw_weapon_idle(cx, base, fh, bob, ph)
+
+# ── WEAPON ON FIGURE (idle/walking) ─────────────────────────────────────────
+func _draw_weapon_idle(cx: float, base: float, fh: float, bob: float, ph: float) -> void:
+	var hipy : float = base + bob
+	var shy  : float = base - fh + bob
+	match _player_weapon:
+		"sword", "greatsword", "spear", "scythe":
+			var wcol : Color = Color(0.78, 0.78, 0.88)
+			match _player_weapon:
+				"greatsword": wcol = Color(0.88, 0.78, 0.28)
+				"spear":      wcol = Color(0.72, 0.82, 0.52)
+				"scythe":     wcol = Color(0.65, 0.28, 0.82)
+			var off : float = fh * 0.16
+			var w1  : Vector2 = Vector2(cx - off, hipy - fh * 0.08)
+			var w2  : Vector2 = Vector2(cx + off * 0.4, shy - fh * 0.28)
+			var wlw : float = maxf(1.5, fh * 0.028)
+			draw_line(w1, w2, wcol, wlw)
+			if _player_weapon == "sword" or _player_weapon == "greatsword":
+				var grd    : Vector2 = w1.lerp(w2, 0.28)
+				var perp_v : Vector2 = (w2 - w1).normalized().rotated(PI * 0.5)
+				draw_line(grd - perp_v * fh * 0.05, grd + perp_v * fh * 0.05,
+					wcol, maxf(1.2, fh * 0.020))
+		"axe", "hammer":
+			var wcol : Color = Color(0.72, 0.60, 0.35)
+			if _player_weapon == "axe": wcol = Color(0.88, 0.48, 0.18)
+			var off  : float = fh * 0.15
+			var w1   : Vector2 = Vector2(cx - off, hipy - fh * 0.10)
+			var w2   : Vector2 = Vector2(cx + off * 0.3, shy - fh * 0.24)
+			draw_line(w1, w2, wcol, maxf(1.8, fh * 0.034))
+			draw_circle(w2, fh * 0.055, wcol)
+		"dagger":
+			var off : float = fh * 0.17
+			var dp1 : Vector2 = Vector2(cx + off, hipy - fh * 0.05)
+			var dp2 : Vector2 = Vector2(cx + off, hipy - fh * 0.26)
+			draw_line(dp1, dp2, Color(0.82, 0.82, 0.92), maxf(1.5, fh * 0.026))
+		"bow":
+			var bc   : Vector2 = Vector2(cx + fh * 0.22, shy + fh * 0.06)
+			var brad : float = fh * 0.22
+			for j in range(7):
+				var a1 : float = -0.70 + float(j) * (1.40 / 7.0)
+				var a2 : float = -0.70 + float(j + 1) * (1.40 / 7.0)
+				draw_line(bc + Vector2(cos(a1) * brad * 0.35, sin(a1) * brad),
+					bc + Vector2(cos(a2) * brad * 0.35, sin(a2) * brad),
+					Color(0.58, 0.40, 0.20), maxf(1.2, fh * 0.022))
+		"wand":
+			var asw  : float   = sin(ph + PI) * 0.36
+			var al   : float   = fh * 0.40
+			var hand : Vector2 = Vector2(cx, shy) + Vector2(sin(asw) * al, cos(asw) * al * 0.48)
+			var tip  : Vector2 = hand + Vector2(fh * 0.14, -fh * 0.12)
+			draw_line(hand, tip, Color(0.38, 0.22, 0.65), maxf(1.5, fh * 0.026))
+			draw_circle(tip, fh * 0.034, Color(0.58, 0.32, 0.92, 0.85))
+		"staff":
+			var sx : float = cx + fh * 0.22
+			draw_line(Vector2(sx, hipy + fh * 0.08), Vector2(sx, shy - fh * 0.50),
+				Color(0.48, 0.32, 0.18), maxf(1.5, fh * 0.028))
+			draw_circle(Vector2(sx, shy - fh * 0.50), fh * 0.040, Color(0.68, 0.48, 0.25))

@@ -1,5 +1,7 @@
 extends Control
 
+const CombatCanvas = preload("res://scripts/combat_canvas.gd")
+
 var hp_label: Label
 var type_label: Label
 var title_label: Label
@@ -19,6 +21,13 @@ var is_win_fight: bool = false
 var _is_first_strike: bool = false
 var _casino_result: String = ""
 var _casino_result_win: bool = false
+
+var combat_canvas: Control = null
+var combat_controls: Control = null
+var _combat_range: int = 1
+var _sel_weapon: int = 0
+var _combat_busy: bool = false
+var _enemy_name_str: String = "Enemy"
 
 const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE","COMPANION CAMP"]
 const TYPE_COLORS = [
@@ -812,117 +821,275 @@ func _add_partner_card(box: VBoxContainer) -> void:
 
 # ── COMBAT ────────────────────────────────────────────────────────────
 func _start_combat(effect: Dictionary, win_fight: bool) -> void:
-	is_win_fight    = win_fight
+	is_win_fight     = win_fight
 	_is_first_strike = true
-	enemy_hp    = effect.get("enemy_hp", 30)
-	enemy_power = effect.get("enemy_power", 10)
-	enemy_label.text    = "%s\nHP: %d" % [effect.get("enemy_name", "Beast"), enemy_hp]
-	enemy_label.visible = true
-	fight_btn.visible   = true
-	_refresh_potion_btn()
-	_show_weapon_effects_hint()
+	enemy_hp         = effect.get("enemy_hp", 30)
+	enemy_power      = effect.get("enemy_power", 10)
+	_enemy_name_str  = effect.get("enemy_name", "Beast")
+	_combat_range    = 1
+	_sel_weapon      = 0
+	_combat_busy     = false
 
-func _refresh_potion_btn() -> void:
-	var ex = action_area.get_node_or_null("PotionBtn")
-	if ex: ex.queue_free()
-	if Inventory.heal_count <= 0 or PlayerStats.hp >= PlayerStats.max_hp:
-		return
-	var btn := Button.new()
-	btn.name = "PotionBtn"
-	btn.text = "USE POTION  (x%d)  [ +40 HP ]" % Inventory.heal_count
-	btn.custom_minimum_size = Vector2(0, 46)
-	btn.add_theme_font_size_override("font_size", 14)
-	btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
-	var sty2 := StyleBoxFlat.new()
-	sty2.bg_color     = Color(0.04, 0.16, 0.07)
-	sty2.border_color = Color(0.22, 0.65, 0.28)
-	sty2.set_border_width_all(1)
-	sty2.set_corner_radius_all(4)
-	btn.add_theme_stylebox_override("normal", sty2)
-	btn.pressed.connect(func():
-		if Inventory.use_heal():
-			_refresh_hp()
-			_refresh_potion_btn()
-	)
-	action_area.add_child(btn)
-	action_area.move_child(btn, 0)
+	_scroll.visible     = false
+	fight_btn.visible   = false
+	enemy_label.visible = false
 
-func _show_weapon_effects_hint() -> void:
-	var fx = Inventory.get_weapon_effects()
-	var parts: Array = []
-	if fx["double_roll"]:     parts.append("Dagger: roll twice")
-	if fx["flat_bonus"] > 0:  parts.append("Axe: +%d dmg" % fx["flat_bonus"])
-	if fx["reduce_enemy"] > 0:parts.append("Bow: -%d enemy" % fx["reduce_enemy"])
-	if fx["first_strike"]:    parts.append("Spear: first strike x2")
-	if fx["stun_chance"] > 0: parts.append("Hammer: %.0f%% stun" % (fx["stun_chance"]*100))
-	if fx["lifesteal"] > 0:   parts.append("Scythe: lifesteal")
-	if fx["dmg_mult"] > 1.0:  parts.append("Greatsword: 1.5x dmg")
-	if parts.is_empty(): return
-	var lbl := Label.new()
-	lbl.text = "  ".join(parts)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	lbl.add_theme_font_size_override("font_size", 10)
-	lbl.add_theme_color_override("font_color", Color(0.62, 0.58, 0.38))
-	action_area.add_child(lbl)
-	action_area.move_child(lbl, 0)
+	combat_canvas = CombatCanvas.new()
+	combat_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	combat_canvas.offset_top    = 64.0
+	combat_canvas.offset_bottom = -240.0
+	combat_canvas.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	add_child(combat_canvas)
+	combat_canvas.setup_combat(_enemy_name_str, enemy_hp, Inventory.weapons)
 
-func _on_fight() -> void:
-	var fx    = Inventory.get_weapon_effects()
-	var dodge = CompanionSystem.get_dodge_bonus() + fx["reduce_enemy"]
+	combat_controls = VBoxContainer.new()
+	combat_controls.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	combat_controls.offset_top    = -235.0
+	combat_controls.offset_left   = 12.0
+	combat_controls.offset_right  = -12.0
+	combat_controls.offset_bottom = -8.0
+	combat_controls.add_theme_constant_override("separation", 5)
+	add_child(combat_controls)
 
-	# Player roll — daggers roll twice and take the higher
-	var p_roll = randi() % 20 + 1
-	if fx["double_roll"]:
-		p_roll = max(p_roll, randi() % 20 + 1)
-	var p = p_roll + PlayerStats.get_combat_power()
+	_rebuild_combat_ui()
 
-	# Hammer stun — enemy skips their counter this round
-	var stunned = randf() < fx["stun_chance"]
-	var e = 0 if stunned else randi() % 20 + 1 + enemy_power - dodge
+func _rebuild_combat_ui() -> void:
+	if not combat_controls or not is_instance_valid(combat_controls): return
+	for c in combat_controls.get_children():
+		c.queue_free()
+	await get_tree().process_frame
+	if not combat_controls or not is_instance_valid(combat_controls): return
 
-	var msg = ""
-	if p >= e or stunned:
-		var dmg = max(5, p - e + 6)
-		# Greatsword multiplier
-		dmg = int(dmg * fx["dmg_mult"])
-		# Spear first-strike double
-		if _is_first_strike and fx["first_strike"]:
-			dmg *= 2
-			msg = "FIRST STRIKE!  "
+	# Range row
+	var range_row := HBoxContainer.new()
+	range_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	range_row.add_theme_constant_override("separation", 6)
+	range_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	combat_controls.add_child(range_row)
+
+	var range_names  = ["CLOSE",             "MEDIUM",         "FAR"]
+	var range_colors = [Color(0.90,0.25,0.20),Color(0.88,0.75,0.20),Color(0.22,0.58,0.92)]
+	for i in 3:
+		var rb := Button.new()
+		rb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rb.custom_minimum_size   = Vector2(0, 30)
+		rb.add_theme_font_size_override("font_size", 11)
+		var rcol = range_colors[i] as Color
+		if i == _combat_range:
+			rb.text = "[%s]" % str(range_names[i])
+			rb.add_theme_color_override("font_color", Color(1, 1, 1))
+			var rsty := StyleBoxFlat.new()
+			rsty.bg_color = Color(rcol.r * 0.30, rcol.g * 0.30, rcol.b * 0.30)
+			rsty.border_color = rcol
+			rsty.set_border_width_all(2)
+			rsty.set_corner_radius_all(3)
+			rb.add_theme_stylebox_override("normal", rsty)
+			rb.disabled = true
+		else:
+			rb.text = str(range_names[i])
+			rb.add_theme_color_override("font_color", rcol)
+			rb.disabled = _combat_busy
+		var ri = i
+		rb.pressed.connect(func(): _set_range(ri))
+		range_row.add_child(rb)
+
+	var range_hints = [
+		"CLOSE: your dmg +30%  ·  enemy dmg +35%  ·  miss 5%",
+		"MEDIUM: balanced  ·  miss 10%",
+		"FAR: your dmg -20%  ·  enemy dmg -25%  ·  miss 22%",
+	]
+	var rhint := Label.new()
+	rhint.text = str(range_hints[_combat_range])
+	rhint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	rhint.add_theme_font_size_override("font_size", 9)
+	rhint.add_theme_color_override("font_color", Color(0.52, 0.48, 0.38))
+	combat_controls.add_child(rhint)
+
+	# Weapon selection row
+	if not Inventory.weapons.is_empty():
+		var wep_row := HBoxContainer.new()
+		wep_row.alignment = BoxContainer.ALIGNMENT_CENTER
+		wep_row.add_theme_constant_override("separation", 4)
+		wep_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		combat_controls.add_child(wep_row)
+
+		for i in Inventory.weapons.size():
+			var w   = Inventory.weapons[i]
+			var wtype = w.get("weapon_type", "sword")
+			var wcol  = Inventory.wtype_color(wtype)
+			var wb := Button.new()
+			wb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			wb.text = "%s\n+%d" % [Inventory.wtype_label(wtype), w.get("damage", 0)]
+			wb.custom_minimum_size = Vector2(0, 36)
+			wb.add_theme_font_size_override("font_size", 9)
+			if i == _sel_weapon:
+				wb.add_theme_color_override("font_color", Color(1, 1, 1))
+				var wsty := StyleBoxFlat.new()
+				wsty.bg_color     = Color(wcol.r * 0.25, wcol.g * 0.25, wcol.b * 0.25)
+				wsty.border_color = wcol
+				wsty.set_border_width_all(2)
+				wsty.set_corner_radius_all(3)
+				wb.add_theme_stylebox_override("normal", wsty)
+				wb.disabled = true
+			else:
+				wb.add_theme_color_override("font_color", wcol)
+				wb.disabled = _combat_busy
+			var wi = i
+			wb.pressed.connect(func(): _select_weapon(wi))
+			wep_row.add_child(wb)
+
+	# Attack + Potion row
+	var btm_row := HBoxContainer.new()
+	btm_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	btm_row.add_theme_constant_override("separation", 8)
+	combat_controls.add_child(btm_row)
+
+	var atk_btn := Button.new()
+	atk_btn.name = "AttackBtn"
+	atk_btn.text = "ATTACK"
+	atk_btn.custom_minimum_size = Vector2(130, 50)
+	atk_btn.add_theme_font_size_override("font_size", 20)
+	atk_btn.add_theme_color_override("font_color", Color(0.95, 0.40, 0.20))
+	atk_btn.disabled = _combat_busy
+	var asty := StyleBoxFlat.new()
+	asty.bg_color     = Color(0.18, 0.06, 0.04)
+	asty.border_color = Color(0.80, 0.30, 0.15) if not _combat_busy else Color(0.35, 0.18, 0.10)
+	asty.set_border_width_all(2)
+	asty.set_corner_radius_all(4)
+	atk_btn.add_theme_stylebox_override("normal", asty)
+	atk_btn.pressed.connect(_on_attack)
+	btm_row.add_child(atk_btn)
+
+	if Inventory.heal_count > 0 and PlayerStats.hp < PlayerStats.max_hp:
+		var pot_btn := Button.new()
+		pot_btn.name = "PotionBtn"
+		pot_btn.text = "POTION\nx%d" % Inventory.heal_count
+		pot_btn.custom_minimum_size = Vector2(72, 50)
+		pot_btn.add_theme_font_size_override("font_size", 11)
+		pot_btn.add_theme_color_override("font_color", Color(0.3, 0.9, 0.45))
+		pot_btn.disabled = _combat_busy
+		var psty := StyleBoxFlat.new()
+		psty.bg_color     = Color(0.04, 0.16, 0.07)
+		psty.border_color = Color(0.22, 0.65, 0.28)
+		psty.set_border_width_all(1)
+		psty.set_corner_radius_all(3)
+		pot_btn.add_theme_stylebox_override("normal", psty)
+		pot_btn.pressed.connect(func():
+			if Inventory.use_heal():
+				_refresh_hp()
+				_rebuild_combat_ui()
+		)
+		btm_row.add_child(pot_btn)
+
+func _set_range(r: int) -> void:
+	if _combat_busy: return
+	_combat_range = r
+	if is_instance_valid(combat_canvas): combat_canvas.set_range(r)
+	_rebuild_combat_ui()
+
+func _select_weapon(idx: int) -> void:
+	if _combat_busy: return
+	_sel_weapon = idx
+	if is_instance_valid(combat_canvas): combat_canvas.set_selected_weapon(idx)
+	_rebuild_combat_ui()
+
+func _on_attack() -> void:
+	if _combat_busy: return
+	if combat_canvas and combat_canvas.is_busy(): return
+	_combat_busy = true
+	_rebuild_combat_ui()
+	await get_tree().process_frame
+
+	var w : Dictionary = {}
+	if _sel_weapon >= 0 and _sel_weapon < Inventory.weapons.size():
+		w = Inventory.weapons[_sel_weapon]
+	var wtype : String = w.get("weapon_type", "sword")
+
+	var double_roll  : bool  = wtype == "dagger"
+	var flat_bonus   : int   = 12 if wtype == "axe" else 0
+	var stun_chance  : float = 0.30 if wtype == "hammer" else 0.0
+	var lifesteal    : float = 0.25 if wtype == "scythe" else 0.0
+	var dmg_mult     : float = 1.5  if wtype == "greatsword" else 1.0
+	var first_strike : bool  = wtype == "spear"
+
+	var miss_ch  : float = [0.05, 0.10, 0.22][_combat_range]
+	var dodge_ch : float = [0.05, 0.12, 0.25][_combat_range]
+	var p_mult   : float = [1.30, 1.00, 0.80][_combat_range]
+	var e_mult   : float = [1.35, 1.00, 0.75][_combat_range]
+	if wtype == "bow": miss_ch = max(0.0, miss_ch - 0.08)
+	if CompanionSystem.get_dodge_bonus() > 0: dodge_ch = min(0.65, dodge_ch + 0.05)
+
+	# Player attack
+	var player_hits : bool = randf() > miss_ch
+	if player_hits:
+		var p_roll : int = randi() % 20 + 1
+		if double_roll: p_roll = max(p_roll, randi() % 20 + 1)
+		var p     : int = p_roll + PlayerStats.get_combat_power() + flat_bonus
+		var e_ctr : int = randi() % 20 + 1 + enemy_power
+		var raw   : int = max(5, p - e_ctr + 6)
+		var dmg   : int = int(float(raw) * p_mult * dmg_mult)
+		if _is_first_strike and first_strike: dmg *= 2
 		_is_first_strike = false
-		if stunned: msg = "STUNNED!  "
-		enemy_hp -= dmg
-		# Scythe lifesteal
-		var steal = int(dmg * fx["lifesteal"])
+		var steal : int = int(float(dmg) * lifesteal)
 		if steal > 0:
-			PlayerStats.heal(steal)
-			_refresh_hp()
-			msg += "+%d HP  " % steal
-		enemy_label.text = "%s\nHP: %d   %s" % [
-			enemy_label.text.split("\n")[0], max(0, enemy_hp), msg]
-		if enemy_hp <= 0:
-			_combat_victory()
+			PlayerStats.heal(steal); _refresh_hp()
+		enemy_hp -= dmg
+		if is_instance_valid(combat_canvas):
+			combat_canvas.update_enemy_hp(enemy_hp)
+			combat_canvas.play_player_attack("-%d" % dmg, true)
 	else:
-		var incoming = max(3, e - p + 4) + fx["incoming_penalty"]
-		PlayerStats.take_damage(incoming)
-		_refresh_hp()
-		_refresh_potion_btn()
-		# Companions and partner share some of the punishment
+		_is_first_strike = false
+		if is_instance_valid(combat_canvas):
+			combat_canvas.play_player_attack("MISS", false)
+
+	if is_instance_valid(combat_canvas):
+		await combat_canvas.animation_done
+
+	if enemy_hp <= 0:
+		_combat_victory()
+		return
+
+	# Enemy counter
+	var stunned : bool = randf() < stun_chance
+	if stunned:
+		if is_instance_valid(combat_canvas):
+			combat_canvas.play_enemy_attack("STUNNED!", false)
+			await combat_canvas.animation_done
+		_combat_busy = false; _rebuild_combat_ui()
+		return
+
+	var player_evades : bool = randf() < dodge_ch
+	if player_evades:
+		if is_instance_valid(combat_canvas):
+			combat_canvas.play_enemy_attack("EVADE", false)
+			await combat_canvas.animation_done
+	else:
+		var e_roll   : int = randi() % 20 + 1 + enemy_power - CompanionSystem.get_dodge_bonus()
+		var incoming : int = max(3, int(float(max(0, e_roll)) * e_mult))
+		PlayerStats.take_damage(incoming); _refresh_hp()
 		CompanionSystem.all_companions_take_damage(max(1, incoming / 4))
 		if PlayerStats.is_married():
 			PlayerStats.partner_take_damage(max(1, incoming / 5))
+		if is_instance_valid(combat_canvas):
+			combat_canvas.play_enemy_attack("-%d" % incoming, true)
+			await combat_canvas.animation_done
 		if not PlayerStats.is_alive():
-			fight_btn.disabled = true
-			desc_label.text = "Your strength fails. The darkness takes you."
-			await get_tree().create_timer(1.5).timeout
+			_combat_busy = false
+			await get_tree().create_timer(0.5).timeout
 			_check_revive_or_die("combat")
+			return
+
+	_combat_busy = false
+	_rebuild_combat_ui()
 
 func _combat_victory() -> void:
-	fight_btn.visible   = false
-	enemy_label.visible = false
-	var pb = action_area.get_node_or_null("PotionBtn")
-	if pb: pb.queue_free()
+	_combat_busy = false
+	if is_instance_valid(combat_canvas):
+		combat_canvas.queue_free(); combat_canvas = null
+	if is_instance_valid(combat_controls):
+		combat_controls.queue_free(); combat_controls = null
+	_scroll.visible = true
+
 	PlayerStats.combat_wins += 1
 	var luck_r = fate.effect.get("reward_luck", 0)
 	if luck_r > 0: PlayerStats.add_luck(luck_r)
@@ -942,6 +1109,12 @@ func _combat_victory() -> void:
 		continue_btn.visible = true
 
 func _check_revive_or_die(cause: String) -> void:
+	if is_instance_valid(combat_canvas):
+		combat_canvas.queue_free(); combat_canvas = null
+	if is_instance_valid(combat_controls):
+		combat_controls.queue_free(); combat_controls = null
+	_scroll.visible = true
+
 	if CompanionSystem.check_revive():
 		CompanionSystem.use_revive()
 		desc_label.text = "Lyria pulls you back from the brink. You survive — barely."

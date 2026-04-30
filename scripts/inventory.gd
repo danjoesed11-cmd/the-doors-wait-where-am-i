@@ -240,6 +240,22 @@ func get_weapon_effects() -> Dictionary:
 				fx["incoming_penalty"] += 4
 	return fx
 
+func get_weapon_effects_single(w: Dictionary) -> Dictionary:
+	var fx = {
+		"double_roll": false, "flat_bonus": 0, "reduce_enemy": 0,
+		"first_strike": false, "stun_chance": 0.0, "lifesteal": 0.0,
+		"dmg_mult": 1.0, "incoming_penalty": 0,
+	}
+	match w.get("weapon_type", "sword"):
+		"dagger":     fx["double_roll"] = true
+		"axe":        fx["flat_bonus"] = 12
+		"bow":        fx["reduce_enemy"] = 8
+		"spear":      fx["first_strike"] = true
+		"hammer":     fx["stun_chance"] = 0.30
+		"scythe":     fx["lifesteal"] = 0.25
+		"greatsword": fx["dmg_mult"] = 1.5; fx["incoming_penalty"] = 4
+	return fx
+
 func rarity_color(r: int) -> Color:
 	return RARITY_COLORS[clamp(r, 0, 6)]
 
