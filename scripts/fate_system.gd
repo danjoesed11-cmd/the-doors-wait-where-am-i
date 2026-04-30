@@ -69,79 +69,79 @@ func _register_fates() -> void:
 	all_fates.append(FateData.new("combat_goblin", FateType.COMBAT,
 		"GOBLIN AMBUSH", "A snarling goblin leaps from the shadows with rusted steel.",
 		"Small. Vicious. Hungry.", 1, 5, 12,
-		{"enemy_name": "Goblin", "enemy_hp": 20, "enemy_power": 6, "reward_luck": 1, "gold_reward": 8}))
+		{"enemy_name": "Goblin", "enemy_hp": 60, "enemy_power": 6, "reward_luck": 1, "gold_reward": 8}))
 	all_fates.append(FateData.new("combat_specter", FateType.COMBAT,
 		"THE SPECTER", "A wailing ghost drifts toward you, reaching with translucent hands.",
 		"It died here, long ago. It wants company.", 2, 7, 10,
-		{"enemy_name": "Specter", "enemy_hp": 28, "enemy_power": 10, "reward_luck": 1, "gold_reward": 12}))
+		{"enemy_name": "Specter", "enemy_hp": 85, "enemy_power": 10, "reward_luck": 1, "gold_reward": 12}))
 	all_fates.append(FateData.new("combat_demon", FateType.COMBAT,
 		"DEMON GUARD", "A horned demon blocks your path, grinning with too many teeth.",
 		"It has been waiting for someone worth killing.", 4, 9, 10,
-		{"enemy_name": "Demon", "enemy_hp": 45, "enemy_power": 18, "reward_luck": 2, "gold_reward": 20}))
+		{"enemy_name": "Demon", "enemy_hp": 130, "enemy_power": 18, "reward_luck": 2, "gold_reward": 20}))
 	all_fates.append(FateData.new("combat_vampire", FateType.COMBAT,
 		"VAMPIRE LORD", "He steps from darkness, silk coat and gleaming fangs. He bows.",
 		"Centuries of hunger. Tonight, he feeds.", 6, 12, 8,
-		{"enemy_name": "Vampire Lord", "enemy_hp": 60, "enemy_power": 26, "reward_luck": 2, "gold_reward": 28}))
+		{"enemy_name": "Vampire Lord", "enemy_hp": 175, "enemy_power": 26, "reward_luck": 2, "gold_reward": 28}))
 	all_fates.append(FateData.new("combat_dragon", FateType.COMBAT,
 		"ANCIENT DRAGON", "The room is a lair. Bones crunch underfoot. The dragon is home.",
 		"You can feel its breath before you see it.", 8, -1, 7,
-		{"enemy_name": "Ancient Dragon", "enemy_hp": 80, "enemy_power": 35, "reward_luck": 3, "gold_reward": 45}))
+		{"enemy_name": "Ancient Dragon", "enemy_hp": 230, "enemy_power": 35, "reward_luck": 3, "gold_reward": 45}))
 	all_fates.append(FateData.new("combat_reaper", FateType.COMBAT,
 		"THE REAPER", "A skeletal figure in a black robe levels a scythe at your throat.",
 		"It whispers your name. It has known this moment for years.", 7, -1, 6,
-		{"enemy_name": "Grim Reaper", "enemy_hp": 70, "enemy_power": 30, "reward_luck": 3, "gold_reward": 38}))
+		{"enemy_name": "Grim Reaper", "enemy_hp": 200, "enemy_power": 30, "reward_luck": 3, "gold_reward": 38}))
 	all_fates.append(FateData.new("combat_orc_warlord", FateType.COMBAT,
 		"ORC WARLORD", "A mountain of muscle and scar tissue fills the doorway.",
 		"It has broken armies. You are one person. It is smiling.", 9, 18, 8,
-		{"enemy_name": "Orc Warlord", "enemy_hp": 75, "enemy_power": 26, "reward_luck": 2, "gold_reward": 22}))
+		{"enemy_name": "Orc Warlord", "enemy_hp": 215, "enemy_power": 26, "reward_luck": 2, "gold_reward": 22}))
 	all_fates.append(FateData.new("combat_shadow_assassin", FateType.COMBAT,
 		"SHADOW ASSASSIN", "The door opens on an empty room. Then the shadows move.",
 		"It was hired specifically. Someone knows you are here.", 12, -1, 7,
-		{"enemy_name": "Shadow Assassin", "enemy_hp": 65, "enemy_power": 34, "reward_luck": 3, "gold_reward": 32}))
+		{"enemy_name": "Shadow Assassin", "enemy_hp": 185, "enemy_power": 34, "reward_luck": 3, "gold_reward": 32}))
 	all_fates.append(FateData.new("combat_lich_king", FateType.COMBAT,
 		"THE LICH KING", "A robed skeleton on a throne of ice raises one finger. An army stirs.",
 		"You were not meant to reach this room. Nobody is.", 15, -1, 6,
-		{"enemy_name": "Lich King", "enemy_hp": 100, "enemy_power": 36, "reward_luck": 3, "gold_reward": 50}))
+		{"enemy_name": "Lich King", "enemy_hp": 280, "enemy_power": 36, "reward_luck": 3, "gold_reward": 50}))
 	all_fates.append(FateData.new("combat_elder_giant", FateType.COMBAT,
 		"ELDER GIANT", "The ceiling rises forty feet. So does the creature standing in the room.",
 		"Its footstep shakes the corridor. It has not noticed you yet.", 20, -1, 5,
-		{"enemy_name": "Elder Giant", "enemy_hp": 130, "enemy_power": 44, "reward_luck": 4, "gold_reward": 65}))
+		{"enemy_name": "Elder Giant", "enemy_hp": 360, "enemy_power": 44, "reward_luck": 4, "gold_reward": 65}))
 	all_fates.append(FateData.new("combat_chaos_knight", FateType.COMBAT,
 		"CHAOS KNIGHT", "Armour of jagged black steel. A sword that bends light around it. A laugh like breaking glass.",
 		"It serves nothing. It simply destroys.", 18, -1, 5,
-		{"enemy_name": "Chaos Knight", "enemy_hp": 115, "enemy_power": 40, "reward_luck": 4, "gold_reward": 58}))
+		{"enemy_name": "Chaos Knight", "enemy_hp": 320, "enemy_power": 40, "reward_luck": 4, "gold_reward": 58}))
 	all_fates.append(FateData.new("combat_fallen_angel", FateType.COMBAT,
 		"FALLEN ANGEL", "Beautiful. Broken. Its white wings are streaked black. It does not want to fight — but it will.",
 		"Something cast it out. You will not be its redemption.", 25, -1, 4,
-		{"enemy_name": "Fallen Angel", "enemy_hp": 150, "enemy_power": 48, "reward_luck": 5, "gold_reward": 80}))
+		{"enemy_name": "Fallen Angel", "enemy_hp": 400, "enemy_power": 48, "reward_luck": 5, "gold_reward": 80}))
 	all_fates.append(FateData.new("combat_horned_king", FateType.COMBAT,
 		"THE HORNED KING", "The oldest evil in these halls. It has been here since before the halls existed.",
 		"It does not rage. It does not threaten. It waits for you to come to it.", 30, -1, 4,
-		{"enemy_name": "Horned King", "enemy_hp": 180, "enemy_power": 55, "reward_luck": 5, "gold_reward": 110}))
+		{"enemy_name": "Horned King", "enemy_hp": 460, "enemy_power": 55, "reward_luck": 5, "gold_reward": 110}))
 	all_fates.append(FateData.new("combat_plague_knight", FateType.COMBAT,
 		"PLAGUE KNIGHT", "Rot and armor. The room smells of decay before the door opens.",
 		"It dies a little every moment. It would like company in that.", 22, -1, 5,
-		{"enemy_name": "Plague Knight", "enemy_hp": 140, "enemy_power": 42, "reward_luck": 4, "gold_reward": 70}))
+		{"enemy_name": "Plague Knight", "enemy_hp": 380, "enemy_power": 42, "reward_luck": 4, "gold_reward": 70}))
 	all_fates.append(FateData.new("combat_void_titan", FateType.COMBAT,
 		"VOID TITAN", "A creature made entirely of compressed darkness. It does not have a face. It does not need one.",
 		"It hit the wall and the wall lost.", 32, -1, 5,
-		{"enemy_name": "Void Titan", "enemy_hp": 185, "enemy_power": 52, "reward_luck": 5, "gold_reward": 95}))
+		{"enemy_name": "Void Titan", "enemy_hp": 480, "enemy_power": 52, "reward_luck": 5, "gold_reward": 95}))
 	all_fates.append(FateData.new("combat_celestial_guard", FateType.COMBAT,
 		"CELESTIAL GUARD", "Golden armor. A weapon that hums with divine light. It was placed here to stop exactly you.",
 		"Heaven sent its second best. You met them.", 40, -1, 4,
-		{"enemy_name": "Celestial Guard", "enemy_hp": 220, "enemy_power": 60, "reward_luck": 5, "gold_reward": 130}))
+		{"enemy_name": "Celestial Guard", "enemy_hp": 550, "enemy_power": 60, "reward_luck": 5, "gold_reward": 130}))
 	all_fates.append(FateData.new("combat_soul_reaver", FateType.COMBAT,
 		"SOUL REAVER", "A figure with hollow eyes and too many arms. Each one holds a different stolen soul.",
 		"It has been collecting a very long time. You are next on the list.", 46, -1, 4,
-		{"enemy_name": "Soul Reaver", "enemy_hp": 260, "enemy_power": 65, "reward_luck": 6, "gold_reward": 165}))
+		{"enemy_name": "Soul Reaver", "enemy_hp": 640, "enemy_power": 65, "reward_luck": 6, "gold_reward": 165}))
 	all_fates.append(FateData.new("combat_satans_herald", FateType.COMBAT,
 		"SATAN'S HERALD", "A demon in formal dress. Red silk. White gloves. It has been sent ahead to assess you.",
 		"It reports back. Satan smiles.", 55, -1, 4,
-		{"enemy_name": "Satan's Herald", "enemy_hp": 300, "enemy_power": 72, "reward_luck": 6, "gold_reward": 220}))
+		{"enemy_name": "Satan's Herald", "enemy_hp": 750, "enemy_power": 72, "reward_luck": 6, "gold_reward": 220}))
 	all_fates.append(FateData.new("combat_death_itself", FateType.COMBAT,
 		"DEATH ITSELF", "Not the Reaper. Not a skeleton. The actual concept of death, standing in a doorway.",
 		"You fought death. This sentence should not be possible.", 62, -1, 3,
-		{"enemy_name": "Death", "enemy_hp": 350, "enemy_power": 78, "reward_luck": 8, "gold_reward": 280}))
+		{"enemy_name": "Death", "enemy_hp": 900, "enemy_power": 78, "reward_luck": 8, "gold_reward": 280}))
 	all_fates.append(FateData.new("combat_dark_sorcerer", FateType.COMBAT,
 		"DARK SORCERER", "Robes of shadow. Eyes like dying stars. He doesn't need to move to destroy you.",
 		"Power without limit. Restraint without point.", 5, 14, 8,
