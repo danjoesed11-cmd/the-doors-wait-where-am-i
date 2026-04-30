@@ -1,22 +1,20 @@
 extends Control
 
-# One-point perspective constants (fractions of node size)
-const VP_X  := 0.50
-const VP_Y  := 0.30
-const VP_HW := 0.13   # tunnel half-width at vanishing point
-const VP_HH := 0.09   # tunnel half-height at vanishing point
+const VP_X  = 0.50
+const VP_Y  = 0.30
+const VP_HW = 0.13
+const VP_HH = 0.09
 
-var _t   := 0.0
-var _wks := []   # [{col, fx, fy, sc, po}]
+var _t   : float = 0.0
+var _wks : Array = []
 
 func setup(companions: Array) -> void:
 	_wks.clear()
-	# Player — gold, centre foreground
 	_wks.append({"col": Color(0.92, 0.78, 0.22), "fx": 0.50, "fy": 0.88, "sc": 1.0, "po": 0.0})
 	for i in companions.size():
 		var c   = companions[i]
 		var tc  = CompanionSystem.type_color(c.get("type", "fighter"))
-		var sgn := 1.0 if i % 2 == 0 else -1.0
+		var sgn : float = 1.0 if i % 2 == 0 else -1.0
 		_wks.append({
 			"col": Color(tc.r, tc.g, tc.b, 0.92),
 			"fx":  0.50 + sgn * 0.16,
@@ -30,28 +28,27 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var W := size.x
-	var H := size.y
+	var W : float = size.x
+	var H : float = size.y
 	if W < 10.0 or H < 10.0:
 		return
 	_draw_hallway(W, H)
 	for wd in _wks:
 		_draw_fig(wd, W, H)
 
-# ── HALLWAY ────────────────────────────────────────────────────────────────
+# ── HALLWAY ─────────────────────────────────────────────────────────────────
 func _draw_hallway(W: float, H: float) -> void:
-	var vpx := W * VP_X
-	var vpy := H * VP_Y
-	var vhw := W * VP_HW
-	var vhh := H * VP_HH
+	var vpx : float = W * VP_X
+	var vpy : float = H * VP_Y
+	var vhw : float = W * VP_HW
+	var vhh : float = H * VP_HH
 
-	# Background fill
 	draw_rect(Rect2(0, 0, W, H), Color(0.022, 0.010, 0.048))
 
-	# Ceiling (darkest — overhead stone)
+	# Ceiling
 	draw_polygon(
 		PackedVector2Array([
-			Vector2(0, 0),      Vector2(W, 0),
+			Vector2(0, 0), Vector2(W, 0),
 			Vector2(vpx + vhw, vpy - vhh), Vector2(vpx - vhw, vpy - vhh)
 		]),
 		PackedColorArray([
@@ -63,7 +60,7 @@ func _draw_hallway(W: float, H: float) -> void:
 	# Left wall
 	draw_polygon(
 		PackedVector2Array([
-			Vector2(0, 0),          Vector2(0, H),
+			Vector2(0, 0),           Vector2(0, H),
 			Vector2(vpx - vhw, vpy), Vector2(vpx - vhw, vpy - vhh)
 		]),
 		PackedColorArray([
@@ -75,7 +72,7 @@ func _draw_hallway(W: float, H: float) -> void:
 	# Right wall
 	draw_polygon(
 		PackedVector2Array([
-			Vector2(W, 0),          Vector2(W, H),
+			Vector2(W, 0),           Vector2(W, H),
 			Vector2(vpx + vhw, vpy), Vector2(vpx + vhw, vpy - vhh)
 		]),
 		PackedColorArray([
@@ -84,10 +81,10 @@ func _draw_hallway(W: float, H: float) -> void:
 		])
 	)
 
-	# Floor (slightly warmer/lighter than walls)
+	# Floor
 	draw_polygon(
 		PackedVector2Array([
-			Vector2(0, H),      Vector2(W, H),
+			Vector2(0, H),       Vector2(W, H),
 			Vector2(vpx + vhw, vpy), Vector2(vpx - vhw, vpy)
 		]),
 		PackedColorArray([
@@ -96,125 +93,109 @@ func _draw_hallway(W: float, H: float) -> void:
 		])
 	)
 
-	# Far tunnel opening (the glow at the end of the corridor)
+	# Far end glow
 	draw_rect(Rect2(vpx - vhw, vpy - vhh, vhw * 2.0, vhh), Color(0.055, 0.028, 0.095))
 	for i in range(6):
-		var a := 0.06 - i * 0.009
-		var r := vhw * (0.45 + i * 0.90)
+		var a : float = 0.06 - float(i) * 0.009
+		var r : float = vhw * (0.45 + float(i) * 0.90)
 		draw_circle(Vector2(vpx, vpy - vhh * 0.35), r, Color(0.55, 0.32, 0.10, a))
 
-	# Floor perspective grid lines (receding to VP)
+	# Floor perspective lines
 	for i in range(1, 8):
-		var t  := float(i) / 8.0
-		var ly := lerp(H, vpy, t)
-		var xl := lerp(0.0, vpx - vhw, t)
-		var xr := lerp(W, vpx + vhw, t)
-		var a  := lerp(0.20, 0.03, t)
+		var t  : float = float(i) / 8.0
+		var ly : float = lerp(H, vpy, t)
+		var xl : float = lerp(0.0, vpx - vhw, t)
+		var xr : float = lerp(W, vpx + vhw, t)
+		var a  : float = lerp(0.20, 0.03, t)
 		draw_line(Vector2(xl, ly), Vector2(xr, ly), Color(0.20, 0.10, 0.32, a), 1.0)
 
-	# Convergence lines — floor edges and ceiling edges
-	draw_line(Vector2(0, H),   Vector2(vpx - vhw, vpy), Color(0.25, 0.12, 0.40, 0.40), 1.5)
-	draw_line(Vector2(W, H),   Vector2(vpx + vhw, vpy), Color(0.25, 0.12, 0.40, 0.40), 1.5)
-	draw_line(Vector2(0, 0),   Vector2(vpx - vhw, vpy - vhh), Color(0.14, 0.07, 0.25, 0.22), 1.0)
-	draw_line(Vector2(W, 0),   Vector2(vpx + vhw, vpy - vhh), Color(0.14, 0.07, 0.25, 0.22), 1.0)
+	# Convergence lines
+	draw_line(Vector2(0, H), Vector2(vpx - vhw, vpy),       Color(0.25, 0.12, 0.40, 0.40), 1.5)
+	draw_line(Vector2(W, H), Vector2(vpx + vhw, vpy),       Color(0.25, 0.12, 0.40, 0.40), 1.5)
+	draw_line(Vector2(0, 0), Vector2(vpx - vhw, vpy - vhh), Color(0.14, 0.07, 0.25, 0.22), 1.0)
+	draw_line(Vector2(W, 0), Vector2(vpx + vhw, vpy - vhh), Color(0.14, 0.07, 0.25, 0.22), 1.0)
 
-	# Wall vertical texture lines
+	# Wall texture lines
 	for i in range(1, 5):
-		var t  := float(i) / 5.0
-		var lx := lerp(0.0, vpx - vhw, t)
-		var rx := lerp(W,   vpx + vhw, t)
-		var yb_l := lerp(H, vpy,       t)
-		var yt_l := lerp(0.0, vpy - vhh, t)
-		var yb_r := lerp(H, vpy,       t)
-		var yt_r := lerp(0.0, vpy - vhh, t)
-		draw_line(Vector2(lx, yb_l), Vector2(lx, yt_l), Color(0.08, 0.04, 0.16, 0.14), 1.0)
-		draw_line(Vector2(rx, yb_r), Vector2(rx, yt_r), Color(0.08, 0.04, 0.16, 0.14), 1.0)
+		var t  : float = float(i) / 5.0
+		var lx : float = lerp(0.0, vpx - vhw, t)
+		var rx : float = lerp(W,   vpx + vhw, t)
+		var yb : float = lerp(H,   vpy,       t)
+		var yt : float = lerp(0.0, vpy - vhh, t)
+		draw_line(Vector2(lx, yb), Vector2(lx, yt), Color(0.08, 0.04, 0.16, 0.14), 1.0)
+		draw_line(Vector2(rx, yb), Vector2(rx, yt), Color(0.08, 0.04, 0.16, 0.14), 1.0)
 
-	# Torches
 	_draw_torch(W, H, vpx, vpy, vhw, vhh, false)
 	_draw_torch(W, H, vpx, vpy, vhw, vhh, true)
 
 func _draw_torch(W: float, H: float, vpx: float, vpy: float,
-				 vhw: float, vhh: float, right: bool) -> void:
-	var t      := 0.26
-	var near_x := 0.0 if not right else W
-	var far_x  := (vpx - vhw) if not right else (vpx + vhw)
-	var wx     := lerp(near_x, far_x, t)
-	var wy_b   := lerp(H,   vpy,       t)
-	var wy_t   := lerp(0.0, vpy - vhh, t)
-	var wy     := lerp(wy_b, wy_t, 0.52)
+				vhw: float, vhh: float, right: bool) -> void:
+	var t      : float = 0.26
+	var near_x : float = W if right else 0.0
+	var far_x  : float = vpx + vhw if right else vpx - vhw
+	var wx     : float = lerp(near_x, far_x, t)
+	var wy_b   : float = lerp(H,   vpy,       t)
+	var wy_t   : float = lerp(0.0, vpy - vhh, t)
+	var wy     : float = lerp(wy_b, wy_t, 0.52)
 
-	var stick  := W * 0.038 * (1.0 - t * 0.5)
-	var tip_x  := wx + (stick if not right else -stick)
-	var tip_y  := wy - stick * 0.3
+	var stick  : float = W * 0.038 * (1.0 - t * 0.5)
+	var sign_x : float = -1.0 if right else 1.0
+	var tip_x  : float = wx + stick * sign_x
+	var tip_y  : float = wy - stick * 0.3
 
-	# Bracket
-	draw_line(Vector2(wx, wy), Vector2(tip_x, wy), Color(0.45, 0.28, 0.12), 2.5)
+	draw_line(Vector2(wx, wy), Vector2(tip_x, wy),    Color(0.45, 0.28, 0.12), 2.5)
 	draw_line(Vector2(tip_x, wy), Vector2(tip_x, wy - stick * 0.5), Color(0.45, 0.28, 0.12), 2.0)
 
-	# Flicker animation
-	var flicker := 0.82 + sin(_t * 3.8 + (1.4 if right else 0.0)) * 0.18
-	var gr      := W * 0.060 * flicker * (1.0 - t * 0.35)
+	var phase_off : float = 1.4 if right else 0.0
+	var flicker   : float = 0.82 + sin(_t * 3.8 + phase_off) * 0.18
+	var gr        : float = W * 0.060 * flicker * (1.0 - t * 0.35)
 
-	# Glow rings (warm fire)
-	draw_circle(Vector2(tip_x, tip_y), gr * 4.0, Color(0.65, 0.35, 0.08, 0.04))
-	draw_circle(Vector2(tip_x, tip_y), gr * 2.5, Color(0.80, 0.46, 0.12, 0.09))
-	draw_circle(Vector2(tip_x, tip_y), gr * 1.4, Color(0.95, 0.60, 0.20, 0.18))
+	draw_circle(Vector2(tip_x, tip_y), gr * 4.0,  Color(0.65, 0.35, 0.08, 0.04))
+	draw_circle(Vector2(tip_x, tip_y), gr * 2.5,  Color(0.80, 0.46, 0.12, 0.09))
+	draw_circle(Vector2(tip_x, tip_y), gr * 1.4,  Color(0.95, 0.60, 0.20, 0.18))
 	draw_circle(Vector2(tip_x, tip_y), gr * 0.65, Color(1.00, 0.80, 0.38, 0.50))
 	draw_circle(Vector2(tip_x, tip_y), gr * 0.28, Color(1.00, 0.95, 0.80, 0.88))
 
-	# Flame tip flicker
-	var ftip := Vector2(tip_x + sin(_t * 4.3) * gr * 0.2, tip_y - gr * 0.4)
-	draw_circle(ftip, gr * 0.18, Color(1.0, 0.98, 0.7, 0.75))
-
-	# Wall wash
+	var ftip_x : float = tip_x + sin(_t * 4.3) * gr * 0.2
+	var ftip_y : float = tip_y - gr * 0.4
+	draw_circle(Vector2(ftip_x, ftip_y), gr * 0.18, Color(1.0, 0.98, 0.7, 0.75))
 	draw_circle(Vector2(wx, wy), gr * 5.5, Color(0.55, 0.30, 0.06, 0.05 * flicker))
 
-# ── FIGURE ─────────────────────────────────────────────────────────────────
+# ── FIGURE ──────────────────────────────────────────────────────────────────
 func _draw_fig(wd: Dictionary, W: float, H: float) -> void:
-	var ph  := _t + float(wd["po"])
-	var col := wd["col"] as Color
-	var sc  := float(wd["sc"])
-	var fx  := float(wd["fx"])
-	var fy  := float(wd["fy"])
+	var ph  : float = _t + float(wd["po"])
+	var col : Color = wd["col"] as Color
+	var sc  : float = float(wd["sc"])
+	var fx  : float = float(wd["fx"])
+	var fy  : float = float(wd["fy"])
 
-	var cx   := W * fx
-	var base := H * fy
+	var cx   : float = W * fx
+	var base : float = H * fy
 
-	# Perspective scale: figures further up the floor appear smaller
-	var persp := clamp((fy - VP_Y) / (1.0 - VP_Y), 0.25, 1.0)
-	var fh    := H * 0.30 * sc * persp
-	var hr    := fh * 0.19
-	var ll    := fh * 0.54
-	var al    := fh * 0.40
-	var lw    := maxf(1.5, 2.8 * sc * persp)
+	var persp : float = clamp((fy - VP_Y) / (1.0 - VP_Y), 0.25, 1.0)
+	var fh    : float = H * 0.30 * sc * persp
+	var hr    : float = fh * 0.19
+	var ll    : float = fh * 0.54
+	var al    : float = fh * 0.40
+	var lw    : float = maxf(1.5, 2.8 * sc * persp)
 
-	var bob := sin(ph * 2.0) * fh * 0.030
-	var hip := Vector2(cx, base + bob)
-	var sho := Vector2(cx, base - fh + bob)
-	var hd  := Vector2(cx, base - fh - hr * 1.15 + bob)
+	var bob   : float = sin(ph * 2.0) * fh * 0.030
+	var hip   : Vector2 = Vector2(cx, base + bob)
+	var sho   : Vector2 = Vector2(cx, base - fh + bob)
+	var hd    : Vector2 = Vector2(cx, base - fh - hr * 1.15 + bob)
 
-	var lsw := sin(ph) * 0.54
-	var asw := sin(ph + PI) * 0.36
+	var lsw   : float = sin(ph) * 0.54
+	var asw   : float = sin(ph + PI) * 0.36
 
-	# Ground shadow
 	draw_circle(Vector2(cx, base + lw), ll * 0.20, Color(0.0, 0.0, 0.0, 0.35 * persp))
-
-	# Subtle glow so figure pops off dark background
 	draw_line(hip, sho, Color(col.r, col.g, col.b, 0.10), lw * 4.0)
 	draw_circle(hd, hr * 1.8, Color(col.r, col.g, col.b, 0.07))
 
-	# Legs
 	draw_line(hip, hip + Vector2(sin(lsw) * ll,  cos(lsw)  * ll * 0.84), col.darkened(0.22), lw)
 	draw_line(hip, hip + Vector2(sin(-lsw) * ll, cos(-lsw) * ll * 0.84), col.darkened(0.22), lw)
-
-	# Torso
 	draw_line(hip, sho, col, lw * 1.45)
-
-	# Arms
-	draw_line(sho, sho + Vector2(sin(asw) * al,  cos(asw)  * al * 0.48), col.lightened(0.08), lw * 0.88)
+	draw_line(sho, sho + Vector2(sin(asw)  * al, cos(asw)  * al * 0.48), col.lightened(0.08), lw * 0.88)
 	draw_line(sho, sho + Vector2(sin(-asw) * al, cos(-asw) * al * 0.48), col.lightened(0.08), lw * 0.88)
 
-	# Head
 	draw_circle(hd, hr, col)
 	draw_circle(hd + Vector2(hr * 0.30, hr * 0.05), hr * 0.24, col.darkened(0.62))
