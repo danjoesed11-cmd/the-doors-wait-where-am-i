@@ -308,16 +308,17 @@ func _range_zones(W: float, H: float) -> void:
 		Color(rcol.r, rcol.g, rcol.b, 0.85))
 
 func _player(W: float, H: float) -> void:
-	var px   : float = float(RANGE_PX[_range])
-	var ex   : float = float(RANGE_EX[_range])
-	var cx   : float = W * lerp(px, lerp(px, ex, 0.32), _p_lunge)
-	var base : float = H * FIG_Y
-	var fh   : float = H * 0.38
+	var px    : float = float(RANGE_PX[_range])
+	var ex    : float = float(RANGE_EX[_range])
+	var cx    : float = W * lerp(px, lerp(px, ex, 0.32), _p_lunge)
+	var base  : float = H * FIG_Y
+	var fh    : float = H * 0.38
 	var wtype : String = "sword"
+	var wname : String = ""
 	if not _weapons.is_empty() and _sel_w < _weapons.size():
 		wtype = _weapons[_sel_w].get("weapon_type", "sword")
+		wname = _weapons[_sel_w].get("name", "")
 	_figure(cx, base, fh, Color(0.92, 0.78, 0.22), false, _p_swing_prog)
-	# Compute lead arm endpoint for weapon
 	var dir    : float   = 1.0
 	var asw_l  : float   = lerp(-0.3 * dir, 1.1 * dir, _p_swing_prog)
 	var al     : float   = fh * 0.38
@@ -325,7 +326,7 @@ func _player(W: float, H: float) -> void:
 	var sho    : Vector2 = Vector2(cx, base - fh + bob)
 	var hand   : Vector2 = sho + Vector2(sin(asw_l) * al, cos(asw_l) * al * 0.50)
 	var arm_dir: Vector2 = (hand - sho).normalized()
-	_weapon(hand, arm_dir, fh, wtype, false, _p_swing_prog)
+	_weapon(hand, arm_dir, fh, wtype, wname, false, _p_swing_prog)
 
 func _enemy(W: float, H: float) -> void:
 	var ex   : float = float(RANGE_EX[_range])
@@ -344,7 +345,7 @@ func _enemy(W: float, H: float) -> void:
 	var sho    : Vector2 = Vector2(cx, base - fh + bob)
 	var hand   : Vector2 = sho + Vector2(sin(asw_l) * al, cos(asw_l) * al * 0.50)
 	var arm_dir: Vector2 = (hand - sho).normalized()
-	_weapon(hand, arm_dir, fh, _enemy_wtype, true, _e_swing_prog)
+	_weapon(hand, arm_dir, fh, _enemy_wtype, _enemy_name, true, _e_swing_prog)
 
 func _figure(cx: float, base: float, fh: float, col: Color, mir: bool, swing_p: float) -> void:
 	var hr  : float = fh * 0.17
@@ -393,101 +394,206 @@ func _figure(cx: float, base: float, fh: float, col: Color, mir: bool, swing_p: 
 	draw_circle(hd, hr, col)
 	draw_circle(hd + Vector2(hr * 0.28 * dir, hr * 0.06), hr * 0.24, col.darkened(0.62))
 
-func _weapon(hand_pos: Vector2, arm_dir: Vector2, fh: float, wtype: String, mir: bool, swing_p: float) -> void:
-	var d : float = -1.0 if mir else 1.0
+func _weapon_col(wtype: String, wname: String) -> Color:
+	var n : String = wname.to_lower()
+	if "oblivion" in n:     return Color(0.12, 0.04, 0.28)
+	if "phantom" in n:      return Color(0.45, 0.35, 0.65)
+	if "blood" in n:        return Color(0.88, 0.08, 0.15)
+	if "inferno" in n:      return Color(0.98, 0.42, 0.06)
+	if "hell" in n:         return Color(0.95, 0.18, 0.08)
+	if "chaos" in n:        return Color(0.72, 0.18, 0.88)
+	if "flame" in n or "fire" in n: return Color(0.98, 0.45, 0.08)
+	if "dragon" in n or "phoenix" in n: return Color(0.95, 0.42, 0.08)
+	if "frost" in n or "ice" in n:  return Color(0.38, 0.82, 0.98)
+	if "shadow" in n:       return Color(0.30, 0.14, 0.52)
+	if "void" in n:         return Color(0.22, 0.08, 0.42)
+	if "dark" in n:         return Color(0.28, 0.12, 0.50)
+	if "obsidian" in n:     return Color(0.20, 0.10, 0.38)
+	if "soul" in n:         return Color(0.45, 0.28, 0.82)
+	if "plague" in n or "poison" in n: return Color(0.42, 0.82, 0.18)
+	if "storm" in n or "thunder" in n: return Color(0.88, 0.88, 0.18)
+	if "arcane" in n:       return Color(0.62, 0.28, 0.98)
+	if "mystical" in n or "enchant" in n: return Color(0.48, 0.52, 0.98)
+	if "god" in n:          return Color(1.00, 0.92, 0.32)
+	if "angel" in n or "celestial" in n: return Color(1.00, 0.90, 0.42)
+	if "silver" in n:       return Color(0.88, 0.90, 0.98)
+	if "mythril" in n or "mithril" in n: return Color(0.52, 0.78, 0.98)
+	if "demon" in n or "devil" in n: return Color(0.92, 0.22, 0.10)
+	if "sorrow" in n:       return Color(0.35, 0.42, 0.72)
+	if "specter" in n or "banshee" in n or "nightmare" in n: return Color(0.58, 0.48, 0.85)
+	if "paladin" in n:      return Color(0.95, 0.82, 0.35)
+	if "lich" in n:         return Color(0.52, 0.22, 0.88)
+	if "reaper" in n or "grim" in n: return Color(0.88, 0.12, 0.20)
+	if "death" in n:        return Color(0.28, 0.12, 0.52)
+	if "war" in n or "battle" in n: return Color(0.82, 0.32, 0.16)
+	if "forest" in n:       return Color(0.30, 0.72, 0.22)
+	if "hunting" in n:      return Color(0.42, 0.58, 0.28)
+	if "kraken" in n:       return Color(0.18, 0.52, 0.72)
+	if "iron" in n or "steel" in n: return Color(0.65, 0.65, 0.72)
+	if "gold" in n:         return Color(1.00, 0.82, 0.18)
+	if "king" in n:         return Color(0.65, 0.22, 0.22)
+	if "orc" in n or "giant" in n or "golem" in n: return Color(0.58, 0.50, 0.32)
+	if "vampire" in n:      return Color(0.72, 0.10, 0.28)
+	if "wolf" in n or "beast" in n or "werewolf" in n: return Color(0.60, 0.50, 0.30)
+	if "rusted" in n or "rusty" in n or "worn" in n or "broken" in n or "bone" in n or "stone" in n or "gnarled" in n or "militia" in n:
+		return Color(0.52, 0.48, 0.38)
+	if "apprentice" in n:   return Color(0.45, 0.45, 0.58)
+	if "bastard" in n or "zweihander" in n: return Color(0.58, 0.58, 0.68)
+	if "herald" in n:       return Color(0.88, 0.22, 0.12)
+	if "titan" in n:        return Color(0.35, 0.18, 0.60)
+	if "knight" in n or "warrior" in n: return Color(0.62, 0.62, 0.70)
+	match wtype:
+		"sword":      return Color(0.78, 0.78, 0.88)
+		"greatsword": return Color(0.88, 0.78, 0.28)
+		"dagger":     return Color(0.82, 0.82, 0.92)
+		"axe":        return Color(0.88, 0.48, 0.18)
+		"hammer":     return Color(0.72, 0.60, 0.35)
+		"scythe":     return Color(0.65, 0.28, 0.82)
+		"spear":      return Color(0.72, 0.82, 0.52)
+		"bow":        return Color(0.58, 0.40, 0.20)
+		"staff":      return Color(0.48, 0.32, 0.18)
+		"wand":       return Color(0.38, 0.22, 0.65)
+	return Color(0.78, 0.78, 0.88)
+
+func _weapon_glow(wname: String) -> Color:
+	var n : String = wname.to_lower()
+	if "oblivion" in n:     return Color(0.30, 0.10, 0.60, 0.75)
+	if "blood" in n:        return Color(0.90, 0.08, 0.18, 0.72)
+	if "inferno" in n or "hell" in n: return Color(1.00, 0.45, 0.08, 0.78)
+	if "chaos" in n:        return Color(0.80, 0.18, 1.00, 0.70)
+	if "flame" in n or "fire" in n or "dragon" in n or "phoenix" in n: return Color(1.00, 0.55, 0.12, 0.72)
+	if "frost" in n or "ice" in n: return Color(0.55, 0.88, 1.00, 0.72)
+	if "void" in n or "dark" in n or "shadow" in n or "phantom" in n or "obsidian" in n: return Color(0.42, 0.18, 0.82, 0.62)
+	if "soul" in n:         return Color(0.50, 0.28, 0.92, 0.65)
+	if "plague" in n:       return Color(0.50, 0.90, 0.18, 0.62)
+	if "storm" in n or "thunder" in n: return Color(0.92, 0.92, 0.25, 0.68)
+	if "arcane" in n or "mystical" in n or "enchant" in n: return Color(0.65, 0.32, 0.98, 0.62)
+	if "god" in n or "angel" in n or "celestial" in n or "paladin" in n: return Color(1.00, 0.95, 0.50, 0.80)
+	if "silver" in n:       return Color(0.90, 0.92, 1.00, 0.45)
+	if "mythril" in n:      return Color(0.55, 0.82, 1.00, 0.55)
+	if "demon" in n or "devil" in n or "herald" in n: return Color(0.95, 0.20, 0.08, 0.72)
+	if "reaper" in n or "grim" in n or "death" in n: return Color(0.85, 0.10, 0.22, 0.68)
+	if "lich" in n:         return Color(0.55, 0.22, 0.90, 0.60)
+	if "sorrow" in n:       return Color(0.38, 0.45, 0.80, 0.50)
+	if "specter" in n or "banshee" in n or "nightmare" in n: return Color(0.62, 0.52, 0.90, 0.55)
+	if "titan" in n:        return Color(0.40, 0.20, 0.70, 0.58)
+	if "war" in n or "battle" in n: return Color(0.82, 0.32, 0.16, 0.42)
+	if "kraken" in n:       return Color(0.20, 0.55, 0.80, 0.52)
+	if "gold" in n:         return Color(1.00, 0.85, 0.22, 0.50)
+	if "sorcerer" in n:     return Color(0.55, 0.22, 0.90, 0.60)
+	return Color(0.0, 0.0, 0.0, 0.0)
+
+func _draw_tip_glow(pos: Vector2, gcol: Color, fh: float) -> void:
+	if gcol.a < 0.01: return
+	draw_circle(pos, fh * 0.090, Color(gcol.r, gcol.g, gcol.b, gcol.a * 0.20))
+	draw_circle(pos, fh * 0.052, Color(gcol.r, gcol.g, gcol.b, gcol.a * 0.50))
+	draw_circle(pos, fh * 0.030, Color(gcol.r, gcol.g, gcol.b, gcol.a * 0.80))
+	var pulse : float = 0.5 + sin(_t * 3.2) * 0.5
+	draw_circle(pos, fh * 0.016 * pulse, Color(1.0, 1.0, 1.0, gcol.a * 0.60))
+
+func _weapon(hand_pos: Vector2, arm_dir: Vector2, fh: float, wtype: String, wname: String, mir: bool, swing_p: float) -> void:
+	var wcol : Color = _weapon_col(wtype, wname)
+	var gcol : Color = _weapon_glow(wname)
 
 	match wtype:
 		"sword":
-			var wcol : Color  = Color(0.78, 0.78, 0.88)
-			var wlen : float  = fh * 0.92
-			var wlw  : float  = maxf(2.0, fh * 0.040)
+			var wlen : float   = fh * 0.92
+			var wlw  : float   = maxf(2.0, fh * 0.040)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol, wlw)
+			draw_line(hand_pos + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
+				tip + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
+				Color(1, 1, 1, 0.18), maxf(1.0, wlw * 0.4))
 			var grd  : Vector2 = hand_pos + arm_dir * wlen * 0.15
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
 			draw_line(grd - perp * fh * 0.08, grd + perp * fh * 0.08, wcol, maxf(1.5, fh * 0.028))
+			_draw_tip_glow(tip, gcol, fh)
 
 		"greatsword":
-			var wcol : Color  = Color(0.88, 0.78, 0.28)
-			var wlen : float  = fh * 1.20
-			var wlw  : float  = maxf(2.5, fh * 0.055)
+			var wlen : float   = fh * 1.20
+			var wlw  : float   = maxf(2.5, fh * 0.055)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol, wlw)
+			draw_line(hand_pos + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
+				tip + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
+				Color(1, 1, 1, 0.15), maxf(1.0, wlw * 0.38))
 			var grd  : Vector2 = hand_pos + arm_dir * wlen * 0.12
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
 			draw_line(grd - perp * fh * 0.10, grd + perp * fh * 0.10, wcol, maxf(2.0, fh * 0.036))
+			_draw_tip_glow(tip, gcol, fh)
 
 		"spear":
-			var wcol : Color  = Color(0.72, 0.82, 0.52)
-			var wlen : float  = fh * 1.30
-			var wlw  : float  = maxf(1.8, fh * 0.030)
+			var wlen : float   = fh * 1.30
+			var wlw  : float   = maxf(1.8, fh * 0.030)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			draw_line(hand_pos, tip, wcol, wlw)
-			# Spear tip triangle
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(tip, tip + arm_dir * fh * 0.12, Color(0.90, 0.95, 0.65), maxf(2.0, fh * 0.038))
-			draw_line(tip - perp * fh * 0.04, tip + arm_dir * fh * 0.12, wcol, maxf(1.5, fh * 0.022))
-			draw_line(tip + perp * fh * 0.04, tip + arm_dir * fh * 0.12, wcol, maxf(1.5, fh * 0.022))
+			draw_line(hand_pos, tip, wcol.darkened(0.15), wlw)
+			var perp  : Vector2 = arm_dir.rotated(PI * 0.5)
+			var stip  : Vector2 = tip + arm_dir * fh * 0.12
+			draw_line(tip, stip, wcol.lightened(0.20), maxf(2.0, fh * 0.038))
+			draw_line(tip - perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
+			draw_line(tip + perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
+			_draw_tip_glow(stip, gcol, fh)
 
 		"scythe":
-			var wcol : Color  = Color(0.65, 0.28, 0.82)
-			var wlen : float  = fh * 1.10
-			var wlw  : float  = maxf(2.0, fh * 0.036)
+			var wlen      : float  = fh * 1.10
+			var wlw       : float  = maxf(2.0, fh * 0.036)
 			var shaft_tip : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, shaft_tip, wcol.darkened(0.20), wlw)
-			# Curved blade: arc from shaft tip
 			var blade_base : Vector2 = shaft_tip
 			var perp       : Vector2 = arm_dir.rotated(PI * 0.5)
+			var blade_end  : Vector2 = shaft_tip
 			for j in range(6):
-				var fj  : float = float(j) / 5.0
-				var fj1 : float = float(j + 1) / 5.0
-				var p0  : Vector2 = blade_base + arm_dir * fh * 0.0 + perp * lerp(0.0, fh * 0.30, fj)  - arm_dir * lerp(0.0, fh * 0.28, fj * fj)
-				var p1  : Vector2 = blade_base + arm_dir * fh * 0.0 + perp * lerp(0.0, fh * 0.30, fj1) - arm_dir * lerp(0.0, fh * 0.28, fj1 * fj1)
+				var fj  : float   = float(j) / 5.0
+				var fj1 : float   = float(j + 1) / 5.0
+				var p0  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj)  - arm_dir * lerp(0.0, fh * 0.28, fj * fj)
+				var p1  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj1) - arm_dir * lerp(0.0, fh * 0.28, fj1 * fj1)
 				draw_line(p0, p1, wcol, maxf(1.5, fh * 0.028))
+				blade_end = p1
+			_draw_tip_glow(blade_end, gcol, fh)
 
 		"axe":
-			var wcol : Color  = Color(0.88, 0.48, 0.18)
-			var wlen : float  = fh * 0.80
-			var wlw  : float  = maxf(2.0, fh * 0.040)
+			var wlen : float   = fh * 0.80
+			var wlw  : float   = maxf(2.0, fh * 0.040)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol.darkened(0.15), wlw)
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
 			draw_line(tip - perp * fh * 0.14, tip + perp * fh * 0.14, wcol, maxf(3.0, fh * 0.055))
 			draw_line(tip, tip + arm_dir * fh * 0.10 + perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
 			draw_line(tip, tip + arm_dir * fh * 0.10 - perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
+			_draw_tip_glow(tip, gcol, fh)
 
 		"hammer":
-			var wcol : Color  = Color(0.72, 0.60, 0.35)
-			var wlen : float  = fh * 0.78
-			var wlw  : float  = maxf(2.0, fh * 0.042)
+			var wlen : float   = fh * 0.78
+			var wlw  : float   = maxf(2.0, fh * 0.042)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol.darkened(0.10), wlw)
-			# Hammer head box
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
 			var h1   : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.04
 			var h2   : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.04
 			var h3   : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.18
 			var h4   : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.18
-			draw_line(h1, h2, wcol, maxf(2.0, fh * 0.036))
-			draw_line(h2, h3, wcol, maxf(2.0, fh * 0.036))
-			draw_line(h3, h4, wcol, maxf(2.0, fh * 0.036))
-			draw_line(h4, h1, wcol, maxf(2.0, fh * 0.036))
+			var ctr  : Vector2 = (h1 + h3) * 0.5
+			for i in range(5):
+				var fi  : float   = float(i) / 4.0
+				var lp  : Vector2 = h1.lerp(h4, fi)
+				var rp  : Vector2 = h2.lerp(h3, fi)
+				draw_line(lp, rp, wcol.lerp(wcol.darkened(0.25), fi), maxf(1.5, fh * 0.030))
+			draw_line(h1, h2, wcol.lightened(0.12), maxf(1.0, fh * 0.016))
+			_draw_tip_glow(ctr, gcol, fh)
 
 		"dagger":
-			var dcol : Color  = Color(0.82, 0.82, 0.92)
-			var wlen : float  = fh * 0.45
-			var wlw  : float  = maxf(1.5, fh * 0.028)
+			var wlen : float   = fh * 0.45
+			var wlw  : float   = maxf(1.5, fh * 0.028)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			draw_line(hand_pos, tip, dcol, wlw)
+			draw_line(hand_pos, tip, wcol, wlw)
+			draw_circle(tip, maxf(1.5, fh * 0.016), wcol.lightened(0.30))
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(hand_pos - perp * fh * 0.04, hand_pos + perp * fh * 0.04,
-				dcol, maxf(1.2, fh * 0.020))
+			draw_line(hand_pos - perp * fh * 0.04, hand_pos + perp * fh * 0.04, wcol, maxf(1.2, fh * 0.020))
+			_draw_tip_glow(tip, gcol, fh)
 
 		"bow":
-			var bcol : Color  = Color(0.58, 0.40, 0.20)
-			var brad : float  = fh * 0.26
+			var brad : float   = fh * 0.26
 			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			# Draw arc (7 segments, bow curves perpendicular to arm)
 			for j in range(7):
 				var fj  : float   = float(j)
 				var fj1 : float   = float(j + 1)
@@ -495,28 +601,32 @@ func _weapon(hand_pos: Vector2, arm_dir: Vector2, fh: float, wtype: String, mir:
 				var a2  : float   = lerp(-0.70, 0.70, fj1 / 7.0)
 				var p0  : Vector2 = hand_pos + perp * sin(a1) * brad + arm_dir * (cos(a1) - 1.0) * brad * 0.40
 				var p1  : Vector2 = hand_pos + perp * sin(a2) * brad + arm_dir * (cos(a2) - 1.0) * brad * 0.40
-				draw_line(p0, p1, bcol, maxf(1.5, fh * 0.026))
-			# String
+				draw_line(p0, p1, wcol, maxf(1.5, fh * 0.026))
 			var s0 : Vector2 = hand_pos + perp * (-brad * 0.95)
 			var s1 : Vector2 = hand_pos + perp * ( brad * 0.95)
-			draw_line(s0, s1, Color(0.75, 0.65, 0.45, 0.65), 1.0)
+			draw_line(s0, s1, Color(wcol.r, wcol.g, wcol.b, 0.65), 1.0)
+			if gcol.a > 0.01:
+				_draw_tip_glow(hand_pos, gcol, fh * 0.7)
 
 		"wand":
-			var wcol : Color  = Color(0.38, 0.22, 0.65)
-			var wlen : float  = fh * 0.55
+			var wlen : float   = fh * 0.55
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol, maxf(2.0, fh * 0.034))
-			draw_circle(tip, fh * 0.048, Color(0.58, 0.32, 0.92, 0.90))
-			draw_circle(tip, fh * 0.028, Color(0.80, 0.60, 1.00, 0.70))
+			var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.3, wcol.g * 1.3, wcol.b * 1.3)
+			draw_circle(tip, fh * 0.048, Color(orb.r, orb.g, orb.b, 0.90))
+			draw_circle(tip, fh * 0.028, Color(1.0, 1.0, 1.0, 0.70))
+			_draw_tip_glow(tip, gcol if gcol.a > 0.01 else Color(wcol.r, wcol.g, wcol.b, 0.50), fh)
 
 		"staff":
-			var scol : Color  = Color(0.48, 0.32, 0.18)
-			var wlen : float  = fh * 1.20
-			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			var base2: Vector2 = hand_pos - arm_dir * fh * 0.30
-			draw_line(base2, tip, scol, maxf(2.0, fh * 0.038))
-			draw_circle(tip, fh * 0.058, Color(0.68, 0.48, 0.25))
-			draw_circle(tip, fh * 0.038, Color(0.92, 0.72, 0.45, 0.80))
+			var wlen  : float   = fh * 1.20
+			var tip   : Vector2 = hand_pos + arm_dir * wlen
+			var base2 : Vector2 = hand_pos - arm_dir * fh * 0.30
+			draw_line(base2, tip, wcol, maxf(2.0, fh * 0.038))
+			var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.4, wcol.g * 1.4, wcol.b * 1.4)
+			draw_circle(tip, fh * 0.060, Color(orb.r, orb.g, orb.b, 0.65))
+			draw_circle(tip, fh * 0.038, Color(orb.r, orb.g, orb.b, 0.88))
+			draw_circle(tip, fh * 0.018, Color(1.0, 1.0, 1.0, 0.80))
+			_draw_tip_glow(tip, gcol if gcol.a > 0.01 else Color(wcol.r, wcol.g, wcol.b, 0.50), fh)
 
 func _draw_impacts(W: float, H: float) -> void:
 	# Impact flash at enemy position (player hit)
