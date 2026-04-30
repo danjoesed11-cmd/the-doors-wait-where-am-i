@@ -492,140 +492,341 @@ func _draw_tip_glow(pos: Vector2, gcol: Color, fh: float) -> void:
 	draw_circle(pos, fh * 0.016 * pulse, Color(1.0, 1.0, 1.0, gcol.a * 0.60))
 
 func _weapon(hand_pos: Vector2, arm_dir: Vector2, fh: float, wtype: String, wname: String, mir: bool, swing_p: float) -> void:
-	var wcol : Color = _weapon_col(wtype, wname)
-	var gcol : Color = _weapon_glow(wname)
+	var wcol : Color  = _weapon_col(wtype, wname)
+	var gcol : Color  = _weapon_glow(wname)
+	var n    : String = wname.to_lower()
+	var perp : Vector2 = arm_dir.rotated(PI * 0.5)
 
 	match wtype:
 		"sword":
 			var wlen : float   = fh * 0.92
 			var wlw  : float   = maxf(2.0, fh * 0.040)
-			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			draw_line(hand_pos, tip, wcol, wlw)
-			draw_line(hand_pos + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
-				tip + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
-				Color(1, 1, 1, 0.18), maxf(1.0, wlw * 0.4))
-			var grd  : Vector2 = hand_pos + arm_dir * wlen * 0.15
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(grd - perp * fh * 0.08, grd + perp * fh * 0.08, wcol, maxf(1.5, fh * 0.028))
-			_draw_tip_glow(tip, gcol, fh)
+			if "flame" in n or "fire" in n or "inferno" in n:
+				# Wavy serpentine flame blade
+				var prev : Vector2 = hand_pos
+				for i in range(1, 13):
+					var t  : float   = float(i) / 12.0
+					var wo : float   = sin(t * PI * 2.8) * fh * 0.020 * (1.0 - t * 0.4)
+					var pt : Vector2 = hand_pos + arm_dir * wlen * t + perp * wo
+					draw_line(prev, pt, wcol.lerp(Color(1.0, 0.6, 0.1), t * 0.5), wlw * (1.0 - t * 0.25))
+					prev = pt
+				draw_line(hand_pos + arm_dir * wlen * 0.15 - perp * fh * 0.08, hand_pos + arm_dir * wlen * 0.15 + perp * fh * 0.08, wcol, maxf(1.5, fh * 0.028))
+				_draw_tip_glow(prev, gcol, fh)
+			elif "shadow" in n or "obsidian" in n or "dark" in n:
+				# Serrated dark blade
+				var tip : Vector2 = hand_pos + arm_dir * wlen
+				draw_line(hand_pos, tip, wcol, wlw)
+				draw_line(hand_pos + perp * wlw * 0.3, tip + perp * wlw * 0.3, Color(1,1,1,0.10), maxf(1.0, wlw * 0.35))
+				for i in range(5):
+					var t  : float   = float(i + 1) / 6.0
+					var sp : Vector2 = hand_pos + arm_dir * wlen * t
+					draw_line(sp, sp - perp * fh * 0.055 + arm_dir * fh * 0.022, wcol.darkened(0.30), maxf(1.0, fh * 0.016))
+				draw_line(hand_pos + arm_dir * wlen * 0.15 - perp * fh * 0.08, hand_pos + arm_dir * wlen * 0.15 + perp * fh * 0.08, wcol, maxf(1.5, fh * 0.028))
+				_draw_tip_glow(tip, gcol, fh)
+			else:
+				var tip : Vector2 = hand_pos + arm_dir * wlen
+				draw_line(hand_pos, tip, wcol, wlw)
+				draw_line(hand_pos + perp * wlw * 0.30, tip + perp * wlw * 0.30, Color(1,1,1,0.16), maxf(1.0, wlw * 0.38))
+				draw_line(hand_pos + arm_dir * wlen * 0.15 - perp * fh * 0.08, hand_pos + arm_dir * wlen * 0.15 + perp * fh * 0.08, wcol, maxf(1.5, fh * 0.028))
+				_draw_tip_glow(tip, gcol, fh)
 
 		"greatsword":
-			var wlen : float   = fh * 1.20
+			var wlen : float   = fh * 1.22
 			var wlw  : float   = maxf(2.5, fh * 0.055)
-			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			draw_line(hand_pos, tip, wcol, wlw)
-			draw_line(hand_pos + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
-				tip + arm_dir.rotated(PI * 0.5) * wlw * 0.3,
-				Color(1, 1, 1, 0.15), maxf(1.0, wlw * 0.38))
-			var grd  : Vector2 = hand_pos + arm_dir * wlen * 0.12
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(grd - perp * fh * 0.10, grd + perp * fh * 0.10, wcol, maxf(2.0, fh * 0.036))
-			_draw_tip_glow(tip, gcol, fh)
+			if "flame" in n or "fire" in n or "chaos" in n:
+				var prev : Vector2 = hand_pos
+				for i in range(1, 13):
+					var t  : float   = float(i) / 12.0
+					var wo : float   = sin(t * PI * 2.5) * fh * 0.025 * (1.0 - t * 0.4)
+					var pt : Vector2 = hand_pos + arm_dir * wlen * t + perp * wo
+					draw_line(prev, pt, wcol.lerp(Color(1.0, 0.6, 0.1) if "flame" in n or "fire" in n else Color(0.8, 0.2, 1.0), t * 0.5), wlw * (1.0 - t * 0.22))
+					prev = pt
+				draw_line(hand_pos + arm_dir * wlen * 0.12 - perp * fh * 0.10, hand_pos + arm_dir * wlen * 0.12 + perp * fh * 0.10, wcol, maxf(2.0, fh * 0.036))
+				_draw_tip_glow(prev, gcol, fh)
+			elif "zweihander" in n:
+				# Extra wide blade + second crossguard at midpoint
+				var tip : Vector2 = hand_pos + arm_dir * wlen
+				draw_line(hand_pos, tip, wcol, wlw * 1.15)
+				draw_line(hand_pos + perp * wlw * 0.35, tip + perp * wlw * 0.35, Color(1,1,1,0.14), maxf(1.0, wlw * 0.40))
+				draw_line(hand_pos + arm_dir * wlen * 0.12 - perp * fh * 0.12, hand_pos + arm_dir * wlen * 0.12 + perp * fh * 0.12, wcol, maxf(2.0, fh * 0.038))
+				draw_line(hand_pos + arm_dir * wlen * 0.46 - perp * fh * 0.07, hand_pos + arm_dir * wlen * 0.46 + perp * fh * 0.07, wcol.darkened(0.15), maxf(1.5, fh * 0.028))
+				_draw_tip_glow(tip, gcol, fh)
+			else:
+				var tip : Vector2 = hand_pos + arm_dir * wlen
+				draw_line(hand_pos, tip, wcol, wlw)
+				draw_line(hand_pos + perp * wlw * 0.30, tip + perp * wlw * 0.30, Color(1,1,1,0.14), maxf(1.0, wlw * 0.38))
+				draw_line(hand_pos + arm_dir * wlen * 0.12 - perp * fh * 0.10, hand_pos + arm_dir * wlen * 0.12 + perp * fh * 0.10, wcol, maxf(2.0, fh * 0.036))
+				_draw_tip_glow(tip, gcol, fh)
+
+		"dagger":
+			var wlen : float = fh * 0.45
+			var wlw  : float = maxf(1.5, fh * 0.028)
+			if "twin" in n:
+				# Two parallel blades
+				var off : float = fh * 0.048
+				for s in [-1.0, 1.0]:
+					var base : Vector2 = hand_pos + perp * s * off
+					var tip  : Vector2 = base + arm_dir * wlen
+					draw_line(base, tip, wcol, wlw)
+					draw_circle(tip, maxf(1.2, fh * 0.014), wcol.lightened(0.35))
+					_draw_tip_glow(tip, gcol, fh * 0.55)
+				draw_line(hand_pos + arm_dir * fh * 0.04 - perp * (off + fh * 0.044), hand_pos + arm_dir * fh * 0.04 + perp * (off + fh * 0.044), wcol, maxf(1.2, fh * 0.018))
+			elif "rusted" in n or "rusty" in n or "bone" in n:
+				# Shorter bent/jagged blade
+				var mid : Vector2 = hand_pos + arm_dir * wlen * 0.50 + perp * fh * 0.012
+				var tip : Vector2 = mid + arm_dir * wlen * 0.45 - perp * fh * 0.008
+				draw_line(hand_pos, mid, wcol, wlw)
+				draw_line(mid, tip, wcol, wlw * 0.85)
+				draw_line(hand_pos - perp * fh * 0.04, hand_pos + perp * fh * 0.04, wcol, maxf(1.2, fh * 0.018))
+				_draw_tip_glow(tip, gcol, fh)
+			else:
+				var tip : Vector2 = hand_pos + arm_dir * wlen
+				draw_line(hand_pos, tip, wcol, wlw)
+				draw_circle(tip, maxf(1.5, fh * 0.016), wcol.lightened(0.30))
+				draw_line(hand_pos - perp * fh * 0.04, hand_pos + perp * fh * 0.04, wcol, maxf(1.2, fh * 0.020))
+				_draw_tip_glow(tip, gcol, fh)
 
 		"spear":
 			var wlen : float   = fh * 1.30
 			var wlw  : float   = maxf(1.8, fh * 0.030)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol.darkened(0.15), wlw)
-			var perp  : Vector2 = arm_dir.rotated(PI * 0.5)
-			var stip  : Vector2 = tip + arm_dir * fh * 0.12
-			draw_line(tip, stip, wcol.lightened(0.20), maxf(2.0, fh * 0.038))
-			draw_line(tip - perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
-			draw_line(tip + perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
-			_draw_tip_glow(stip, gcol, fh)
+			if "frost" in n or "ice" in n:
+				# Ice crystal multi-spike tip
+				var stip : Vector2 = tip + arm_dir * fh * 0.14
+				draw_line(tip, stip, wcol.lightened(0.25), maxf(2.5, fh * 0.044))
+				draw_line(tip, tip + arm_dir * fh * 0.09 + perp * fh * 0.068, wcol, maxf(1.5, fh * 0.022))
+				draw_line(tip, tip + arm_dir * fh * 0.09 - perp * fh * 0.068, wcol, maxf(1.5, fh * 0.022))
+				draw_line(tip, tip + arm_dir * fh * 0.04 + perp * fh * 0.098, wcol.darkened(0.10), maxf(1.2, fh * 0.018))
+				draw_line(tip, tip + arm_dir * fh * 0.04 - perp * fh * 0.098, wcol.darkened(0.10), maxf(1.2, fh * 0.018))
+				_draw_tip_glow(stip, gcol, fh)
+			elif "thunder" in n or "storm" in n:
+				# Forked lightning tip
+				var fork : Vector2 = tip + arm_dir * fh * 0.06
+				draw_line(tip, fork, wcol.lightened(0.20), maxf(2.0, fh * 0.038))
+				draw_line(fork, fork + arm_dir * fh * 0.09 + perp * fh * 0.065, wcol, maxf(1.5, fh * 0.026))
+				draw_line(fork, fork + arm_dir * fh * 0.09 - perp * fh * 0.065, wcol, maxf(1.5, fh * 0.026))
+				_draw_tip_glow(fork, gcol, fh)
+			else:
+				var stip : Vector2 = tip + arm_dir * fh * 0.12
+				draw_line(tip, stip, wcol.lightened(0.20), maxf(2.0, fh * 0.038))
+				draw_line(tip - perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
+				draw_line(tip + perp * fh * 0.04, stip, wcol, maxf(1.5, fh * 0.022))
+				_draw_tip_glow(stip, gcol, fh)
 
 		"scythe":
-			var wlen      : float  = fh * 1.10
-			var wlw       : float  = maxf(2.0, fh * 0.036)
+			var wlen      : float   = fh * 1.10
+			var wlw       : float   = maxf(2.0, fh * 0.036)
 			var shaft_tip : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, shaft_tip, wcol.darkened(0.20), wlw)
 			var blade_base : Vector2 = shaft_tip
-			var perp       : Vector2 = arm_dir.rotated(PI * 0.5)
 			var blade_end  : Vector2 = shaft_tip
-			for j in range(6):
-				var fj  : float   = float(j) / 5.0
-				var fj1 : float   = float(j + 1) / 5.0
-				var p0  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj)  - arm_dir * lerp(0.0, fh * 0.28, fj * fj)
-				var p1  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj1) - arm_dir * lerp(0.0, fh * 0.28, fj1 * fj1)
-				draw_line(p0, p1, wcol, maxf(1.5, fh * 0.028))
-				blade_end = p1
-			_draw_tip_glow(blade_end, gcol, fh)
+			if "blood" in n or "reaper" in n or "grim" in n:
+				# Longer dramatic curve + blood drip dots
+				for j in range(8):
+					var fj  : float   = float(j) / 7.0
+					var fj1 : float   = float(j + 1) / 7.0
+					var p0  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.38, fj)  - arm_dir * lerp(0.0, fh * 0.34, fj * fj)
+					var p1  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.38, fj1) - arm_dir * lerp(0.0, fh * 0.34, fj1 * fj1)
+					draw_line(p0, p1, wcol, maxf(1.5, fh * 0.030))
+					blade_end = p1
+				for k in range(3):
+					var dt : float   = float(k + 1) / 4.0
+					var dp : Vector2 = blade_base + perp * lerp(0.0, fh * 0.28, dt) - arm_dir * lerp(0.0, fh * 0.24, dt * dt)
+					draw_circle(dp + arm_dir * fh * 0.022, fh * 0.012, Color(wcol.r, wcol.g, wcol.b, 0.75))
+				_draw_tip_glow(blade_end, gcol, fh)
+			elif "oblivion" in n or "soul" in n or "phantom" in n:
+				# Double offset arcs for ethereal look
+				for arc in range(2):
+					var arc_off : float = float(arc) * fh * 0.055
+					for j in range(6):
+						var fj  : float   = float(j) / 5.0
+						var fj1 : float   = float(j + 1) / 5.0
+						var p0  : Vector2 = blade_base + arm_dir * arc_off + perp * lerp(0.0, fh * 0.28, fj)  - arm_dir * lerp(0.0, fh * 0.26, fj * fj)
+						var p1  : Vector2 = blade_base + arm_dir * arc_off + perp * lerp(0.0, fh * 0.28, fj1) - arm_dir * lerp(0.0, fh * 0.26, fj1 * fj1)
+						var alp : float = 0.90 if arc == 0 else 0.45
+						draw_line(p0, p1, Color(wcol.r, wcol.g, wcol.b, alp), maxf(1.5, fh * (0.028 if arc == 0 else 0.018)))
+						if arc == 0: blade_end = p1
+				_draw_tip_glow(blade_end, gcol, fh)
+			else:
+				for j in range(6):
+					var fj  : float   = float(j) / 5.0
+					var fj1 : float   = float(j + 1) / 5.0
+					var p0  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj)  - arm_dir * lerp(0.0, fh * 0.28, fj * fj)
+					var p1  : Vector2 = blade_base + perp * lerp(0.0, fh * 0.30, fj1) - arm_dir * lerp(0.0, fh * 0.28, fj1 * fj1)
+					draw_line(p0, p1, wcol, maxf(1.5, fh * 0.028))
+					blade_end = p1
+				_draw_tip_glow(blade_end, gcol, fh)
 
 		"axe":
 			var wlen : float   = fh * 0.80
 			var wlw  : float   = maxf(2.0, fh * 0.040)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol.darkened(0.15), wlw)
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(tip - perp * fh * 0.14, tip + perp * fh * 0.14, wcol, maxf(3.0, fh * 0.055))
-			draw_line(tip, tip + arm_dir * fh * 0.10 + perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
-			draw_line(tip, tip + arm_dir * fh * 0.10 - perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
-			_draw_tip_glow(tip, gcol, fh)
+			if "chaos" in n:
+				# Asymmetric jagged double-edge
+				draw_line(tip - perp * fh * 0.18, tip + perp * fh * 0.10, wcol, maxf(3.0, fh * 0.055))
+				draw_line(tip, tip + arm_dir * fh * 0.14 + perp * fh * 0.05, wcol, maxf(2.0, fh * 0.040))
+				draw_line(tip, tip + arm_dir * fh * 0.08 - perp * fh * 0.08, wcol.lightened(0.10), maxf(2.0, fh * 0.034))
+				draw_line(tip - perp * fh * 0.18, tip + arm_dir * fh * 0.10 - perp * fh * 0.12, wcol.darkened(0.10), maxf(1.5, fh * 0.024))
+				_draw_tip_glow(tip, gcol, fh)
+			elif "dragon" in n:
+				# Curved crescent fang head
+				for j in range(6):
+					var fj  : float   = float(j) / 5.0
+					var fj1 : float   = float(j + 1) / 5.0
+					var p0  : Vector2 = tip + perp * lerp(-fh * 0.14, fh * 0.06, fj)  + arm_dir * (sin(fj * PI) * fh * 0.12)
+					var p1  : Vector2 = tip + perp * lerp(-fh * 0.14, fh * 0.06, fj1) + arm_dir * (sin(fj1 * PI) * fh * 0.12)
+					draw_line(p0, p1, wcol, maxf(2.5, fh * 0.046))
+				_draw_tip_glow(tip + arm_dir * fh * 0.06, gcol, fh)
+			else:
+				draw_line(tip - perp * fh * 0.14, tip + perp * fh * 0.14, wcol, maxf(3.0, fh * 0.055))
+				draw_line(tip, tip + arm_dir * fh * 0.10 + perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
+				draw_line(tip, tip + arm_dir * fh * 0.10 - perp * fh * 0.06, wcol, maxf(2.0, fh * 0.040))
+				_draw_tip_glow(tip, gcol, fh)
 
 		"hammer":
 			var wlen : float   = fh * 0.78
 			var wlw  : float   = maxf(2.0, fh * 0.042)
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol.darkened(0.10), wlw)
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			var h1   : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.04
-			var h2   : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.04
-			var h3   : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.18
-			var h4   : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.18
-			var ctr  : Vector2 = (h1 + h3) * 0.5
+			var h1  : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.04
+			var h2  : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.04
+			var h3  : Vector2 = tip + perp * fh * 0.10 + arm_dir * fh * 0.18
+			var h4  : Vector2 = tip - perp * fh * 0.10 + arm_dir * fh * 0.18
+			var ctr : Vector2 = (h1 + h3) * 0.5
 			for i in range(5):
-				var fi  : float   = float(i) / 4.0
-				var lp  : Vector2 = h1.lerp(h4, fi)
-				var rp  : Vector2 = h2.lerp(h3, fi)
-				draw_line(lp, rp, wcol.lerp(wcol.darkened(0.25), fi), maxf(1.5, fh * 0.030))
+				var fi : float   = float(i) / 4.0
+				draw_line(h1.lerp(h4, fi), h2.lerp(h3, fi), wcol.lerp(wcol.darkened(0.25), fi), maxf(1.5, fh * 0.030))
 			draw_line(h1, h2, wcol.lightened(0.12), maxf(1.0, fh * 0.016))
+			if "storm" in n or "thunder" in n:
+				# Lightning bolt etched on face
+				var lc : Color   = Color(1.0, 0.95, 0.30, 0.92)
+				var ls : Vector2 = h1.lerp(h2, 0.5)
+				var lm : Vector2 = ls + arm_dir * fh * 0.055 + perp * fh * 0.030
+				var le : Vector2 = ls + arm_dir * fh * 0.12
+				draw_line(ls, lm, lc, maxf(1.5, fh * 0.022))
+				draw_line(lm, le, lc, maxf(1.5, fh * 0.022))
+				draw_line(lm, lm + perp * fh * 0.038, lc, maxf(1.0, fh * 0.016))
+			elif "plague" in n:
+				# Skull eye sockets on head face
+				var fc : Color = Color(0.0, 0.0, 0.0, 0.55)
+				draw_circle(ctr - perp * fh * 0.034 - arm_dir * fh * 0.008, fh * 0.018, fc)
+				draw_circle(ctr + perp * fh * 0.034 - arm_dir * fh * 0.008, fh * 0.018, fc)
+				draw_line(ctr - perp * fh * 0.032 + arm_dir * fh * 0.040, ctr + perp * fh * 0.032 + arm_dir * fh * 0.040, fc, maxf(1.0, fh * 0.014))
 			_draw_tip_glow(ctr, gcol, fh)
 
-		"dagger":
-			var wlen : float   = fh * 0.45
-			var wlw  : float   = maxf(1.5, fh * 0.028)
-			var tip  : Vector2 = hand_pos + arm_dir * wlen
-			draw_line(hand_pos, tip, wcol, wlw)
-			draw_circle(tip, maxf(1.5, fh * 0.016), wcol.lightened(0.30))
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			draw_line(hand_pos - perp * fh * 0.04, hand_pos + perp * fh * 0.04, wcol, maxf(1.2, fh * 0.020))
-			_draw_tip_glow(tip, gcol, fh)
-
 		"bow":
-			var brad : float   = fh * 0.26
-			var perp : Vector2 = arm_dir.rotated(PI * 0.5)
-			for j in range(7):
-				var fj  : float   = float(j)
-				var fj1 : float   = float(j + 1)
-				var a1  : float   = lerp(-0.70, 0.70, fj / 7.0)
-				var a2  : float   = lerp(-0.70, 0.70, fj1 / 7.0)
-				var p0  : Vector2 = hand_pos + perp * sin(a1) * brad + arm_dir * (cos(a1) - 1.0) * brad * 0.40
-				var p1  : Vector2 = hand_pos + perp * sin(a2) * brad + arm_dir * (cos(a2) - 1.0) * brad * 0.40
-				draw_line(p0, p1, wcol, maxf(1.5, fh * 0.026))
-			var s0 : Vector2 = hand_pos + perp * (-brad * 0.95)
-			var s1 : Vector2 = hand_pos + perp * ( brad * 0.95)
-			draw_line(s0, s1, Color(wcol.r, wcol.g, wcol.b, 0.65), 1.0)
-			if gcol.a > 0.01:
+			if "god" in n or "divine" in n:
+				# Double arc: outer + inner decorative
+				for bi in range(2):
+					var brad : float = fh * (0.30 if bi == 0 else 0.18)
+					var blw  : float = maxf(1.5 if bi == 1 else 2.0, fh * (0.022 if bi == 1 else 0.028))
+					var balp : float = 1.0 if bi == 0 else 0.48
+					for j in range(7):
+						var fj  : float   = float(j)
+						var fj1 : float   = float(j + 1)
+						var a1  : float   = lerp(-0.70, 0.70, fj / 7.0)
+						var a2  : float   = lerp(-0.70, 0.70, fj1 / 7.0)
+						var p0  : Vector2 = hand_pos + perp * sin(a1) * brad + arm_dir * (cos(a1) - 1.0) * brad * 0.40
+						var p1  : Vector2 = hand_pos + perp * sin(a2) * brad + arm_dir * (cos(a2) - 1.0) * brad * 0.40
+						draw_line(p0, p1, Color(wcol.r, wcol.g, wcol.b, balp), blw)
+				var s0 : Vector2 = hand_pos + perp * (-fh * 0.29)
+				var s1 : Vector2 = hand_pos + perp * ( fh * 0.29)
+				draw_line(s0, s1, Color(wcol.r, wcol.g, wcol.b, 0.65), 1.0)
 				_draw_tip_glow(hand_pos, gcol, fh * 0.7)
+			elif "arcane" in n or "longbow" in n:
+				# Taller slimmer arc
+				var brad : float = fh * 0.32
+				for j in range(9):
+					var fj  : float   = float(j)
+					var fj1 : float   = float(j + 1)
+					var a1  : float   = lerp(-0.80, 0.80, fj / 9.0)
+					var a2  : float   = lerp(-0.80, 0.80, fj1 / 9.0)
+					var p0  : Vector2 = hand_pos + perp * sin(a1) * brad + arm_dir * (cos(a1) - 1.0) * brad * 0.28
+					var p1  : Vector2 = hand_pos + perp * sin(a2) * brad + arm_dir * (cos(a2) - 1.0) * brad * 0.28
+					draw_line(p0, p1, wcol, maxf(1.5, fh * 0.024))
+				var s0 : Vector2 = hand_pos + perp * (-brad * 0.95)
+				var s1 : Vector2 = hand_pos + perp * ( brad * 0.95)
+				draw_line(s0, s1, Color(wcol.r, wcol.g, wcol.b, 0.65), 1.0)
+				_draw_tip_glow(hand_pos, gcol, fh * 0.7)
+			else:
+				var brad : float   = fh * 0.26
+				for j in range(7):
+					var fj  : float   = float(j)
+					var fj1 : float   = float(j + 1)
+					var a1  : float   = lerp(-0.70, 0.70, fj / 7.0)
+					var a2  : float   = lerp(-0.70, 0.70, fj1 / 7.0)
+					var p0  : Vector2 = hand_pos + perp * sin(a1) * brad + arm_dir * (cos(a1) - 1.0) * brad * 0.40
+					var p1  : Vector2 = hand_pos + perp * sin(a2) * brad + arm_dir * (cos(a2) - 1.0) * brad * 0.40
+					draw_line(p0, p1, wcol, maxf(1.5, fh * 0.026))
+				var s0 : Vector2 = hand_pos + perp * (-brad * 0.95)
+				var s1 : Vector2 = hand_pos + perp * ( brad * 0.95)
+				draw_line(s0, s1, Color(wcol.r, wcol.g, wcol.b, 0.65), 1.0)
+				if gcol.a > 0.01:
+					_draw_tip_glow(hand_pos, gcol, fh * 0.7)
 
 		"wand":
 			var wlen : float   = fh * 0.55
 			var tip  : Vector2 = hand_pos + arm_dir * wlen
 			draw_line(hand_pos, tip, wcol, maxf(2.0, fh * 0.034))
-			var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.3, wcol.g * 1.3, wcol.b * 1.3)
-			draw_circle(tip, fh * 0.048, Color(orb.r, orb.g, orb.b, 0.90))
-			draw_circle(tip, fh * 0.028, Color(1.0, 1.0, 1.0, 0.70))
+			if "mystical" in n:
+				# Rotating star burst at tip
+				draw_circle(tip, fh * 0.040, Color(wcol.r, wcol.g, wcol.b, 0.80))
+				for i in range(6):
+					var angle : float   = float(i) * PI / 3.0 + _t * 0.9
+					var sp    : Vector2 = tip + Vector2(cos(angle), sin(angle)) * fh * 0.064
+					draw_line(tip, sp, Color(wcol.r, wcol.g, wcol.b, 0.70), maxf(1.0, fh * 0.016))
+				draw_circle(tip, fh * 0.020, Color(1.0, 1.0, 1.0, 0.85))
+			else:
+				var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.3, wcol.g * 1.3, wcol.b * 1.3)
+				draw_circle(tip, fh * 0.048, Color(orb.r, orb.g, orb.b, 0.90))
+				draw_circle(tip, fh * 0.028, Color(1.0, 1.0, 1.0, 0.70))
 			_draw_tip_glow(tip, gcol if gcol.a > 0.01 else Color(wcol.r, wcol.g, wcol.b, 0.50), fh)
 
 		"staff":
 			var wlen  : float   = fh * 1.20
 			var tip   : Vector2 = hand_pos + arm_dir * wlen
 			var base2 : Vector2 = hand_pos - arm_dir * fh * 0.30
-			draw_line(base2, tip, wcol, maxf(2.0, fh * 0.038))
-			var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.4, wcol.g * 1.4, wcol.b * 1.4)
-			draw_circle(tip, fh * 0.060, Color(orb.r, orb.g, orb.b, 0.65))
-			draw_circle(tip, fh * 0.038, Color(orb.r, orb.g, orb.b, 0.88))
-			draw_circle(tip, fh * 0.018, Color(1.0, 1.0, 1.0, 0.80))
+			if "gnarled" in n or "bone" in n:
+				# Kinked shaft
+				var mid : Vector2 = hand_pos + arm_dir * wlen * 0.55 + perp * fh * 0.04
+				draw_line(base2, mid, wcol, maxf(2.0, fh * 0.038))
+				draw_line(mid, tip, wcol, maxf(2.0, fh * 0.038))
+			else:
+				draw_line(base2, tip, wcol, maxf(2.0, fh * 0.038))
+			if "soul" in n or "death" in n or "reaper" in n:
+				# Skull top
+				var sz : float = fh * 0.058
+				draw_circle(tip, sz, wcol)
+				draw_circle(tip - perp * sz * 0.32 - arm_dir * sz * 0.10, sz * 0.24, Color(0.0, 0.0, 0.0, 0.60))
+				draw_circle(tip + perp * sz * 0.32 - arm_dir * sz * 0.10, sz * 0.24, Color(0.0, 0.0, 0.0, 0.60))
+				draw_line(tip - perp * sz * 0.44 + arm_dir * sz * 0.30, tip + perp * sz * 0.44 + arm_dir * sz * 0.30, Color(0.0, 0.0, 0.0, 0.55), maxf(1.2, fh * 0.016))
+			elif "inferno" in n or "flame" in n or "fire" in n:
+				# Flame burst radiating from tip
+				var oc : Color = gcol if gcol.a > 0.01 else Color(1.0, 0.55, 0.10, 0.80)
+				draw_circle(tip, fh * 0.050, Color(oc.r, oc.g, oc.b, 0.65))
+				for i in range(7):
+					var angle : float   = float(i) * TAU / 7.0 + _t * 1.2
+					var fp    : Vector2 = tip + Vector2(cos(angle), sin(angle)) * fh * 0.080
+					draw_line(tip, fp, Color(oc.r, oc.g, oc.b, 0.70), maxf(1.5, fh * 0.022))
+				draw_circle(tip, fh * 0.022, Color(1.0, 0.95, 0.6, 0.90))
+			elif "arcane" in n or "enchant" in n:
+				# Hexagonal crystal gem
+				var gsz : float = fh * 0.055
+				for i in range(6):
+					var a0 : float   = float(i) * PI / 3.0
+					var a1 : float   = float(i + 1) * PI / 3.0
+					var p0 : Vector2 = tip + Vector2(cos(a0), sin(a0)) * gsz
+					var p1 : Vector2 = tip + Vector2(cos(a1), sin(a1)) * gsz
+					draw_line(p0, p1, wcol.lightened(0.20), maxf(1.5, fh * 0.024))
+					draw_line(tip, p0, wcol.darkened(float(i % 2) * 0.10), maxf(1.0, fh * 0.016))
+				draw_circle(tip, fh * 0.022, Color(1.0, 1.0, 1.0, 0.80))
+			else:
+				var orb : Color = gcol if gcol.a > 0.01 else Color(wcol.r * 1.4, wcol.g * 1.4, wcol.b * 1.4)
+				draw_circle(tip, fh * 0.060, Color(orb.r, orb.g, orb.b, 0.65))
+				draw_circle(tip, fh * 0.038, Color(orb.r, orb.g, orb.b, 0.88))
+				draw_circle(tip, fh * 0.018, Color(1.0, 1.0, 1.0, 0.80))
 			_draw_tip_glow(tip, gcol if gcol.a > 0.01 else Color(wcol.r, wcol.g, wcol.b, 0.50), fh)
 
 func _draw_impacts(W: float, H: float) -> void:
