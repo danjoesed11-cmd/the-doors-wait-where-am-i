@@ -1,17 +1,17 @@
 extends Control
 
-const DoorPanel    = preload("res://scripts/door_art.gd")
-const WalkerCanvas = preload("res://scripts/walker.gd")
+const DoorPanel      = preload("res://scripts/door_art.gd")
+const HallwayCanvas  = preload("res://scripts/hallway_canvas.gd")
 
-var round_label:  Label
-var hp_label:     Label
-var gold_label:   Label
-var partner_label: Label
-var inv_bar:      Control
-var walker_canvas: Control
-var door_panels:  Array = []
-var fates:        Array = []
-var can_pick:     bool  = true
+var round_label:    Label
+var hp_label:       Label
+var gold_label:     Label
+var partner_label:  Label
+var inv_bar:        Control
+var hallway_canvas: Control
+var door_panels:    Array = []
+var fates:          Array = []
+var can_pick:       bool  = true
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -20,7 +20,7 @@ func _ready() -> void:
 	PlayerStats.stats_changed.connect(_update_hud)
 	Inventory.inventory_changed.connect(_refresh_inv_bar)
 	CompanionSystem.companions_changed.connect(_refresh_inv_bar)
-	CompanionSystem.companions_changed.connect(_refresh_walkers)
+	CompanionSystem.companions_changed.connect(_refresh_hallway)
 
 func _build_ui() -> void:
 	var bg := ColorRect.new()
@@ -28,43 +28,13 @@ func _build_ui() -> void:
 	bg.color = Color(0.030, 0.015, 0.062)
 	add_child(bg)
 
-	# Corridor perspective layers
-	var corridor_levels = [
-		[0.03, 0.97, 0.09, 0.55, Color(0.05, 0.025, 0.09)],
-		[0.10, 0.90, 0.11, 0.53, Color(0.04, 0.020, 0.08)],
-		[0.18, 0.82, 0.14, 0.51, Color(0.035,0.018, 0.072)],
-		[0.27, 0.73, 0.18, 0.49, Color(0.028,0.014, 0.060)],
-		[0.37, 0.63, 0.22, 0.47, Color(0.020,0.010, 0.045)],
-	]
-	for lvl in corridor_levels:
-		var r := ColorRect.new()
-		r.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		r.anchor_left = lvl[0]; r.anchor_right  = lvl[1]
-		r.anchor_top  = lvl[2]; r.anchor_bottom = lvl[3]
-		r.color = lvl[4]
-		add_child(r)
-
-	# Torch glows
-	_add_torch(0.06, 0.28)
-	_add_torch(0.94, 0.28)
-
-	var atmo := Label.new()
-	atmo.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	atmo.anchor_top = 0.10; atmo.anchor_bottom = 0.22
-	atmo.text = "Choose wisely."
-	atmo.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	atmo.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	atmo.add_theme_font_size_override("font_size", 13)
-	atmo.add_theme_color_override("font_color", Color(0.25, 0.16, 0.25))
-	add_child(atmo)
-
-	# Walking figures in corridor
-	walker_canvas = WalkerCanvas.new()
-	walker_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	walker_canvas.anchor_top    = 0.18
-	walker_canvas.anchor_bottom = 0.57
-	walker_canvas.mouse_filter  = Control.MOUSE_FILTER_IGNORE
-	add_child(walker_canvas)
+	# Hallway — perspective corridor with animated torches and walking figures
+	hallway_canvas = HallwayCanvas.new()
+	hallway_canvas.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	hallway_canvas.anchor_top    = 0.08
+	hallway_canvas.anchor_bottom = 0.56
+	hallway_canvas.mouse_filter  = Control.MOUSE_FILTER_IGNORE
+	add_child(hallway_canvas)
 
 	# HUD
 	var hud := HBoxContainer.new()
@@ -140,15 +110,7 @@ func _build_ui() -> void:
 		dp.door_pressed.connect(_on_door_chosen.bind(i))
 		door_panels.append(dp)
 
-	walker_canvas.setup(CompanionSystem.companions)
-
-func _add_torch(ax: float, ay: float) -> void:
-	var t := ColorRect.new()
-	t.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	t.anchor_left = ax - 0.03; t.anchor_right  = ax + 0.03
-	t.anchor_top  = ay - 0.04; t.anchor_bottom = ay + 0.04
-	t.color = Color(0.9, 0.55, 0.1, 0.18)
-	add_child(t)
+	hallway_canvas.setup(CompanionSystem.companions)
 
 func _populate_inv_bar() -> void:
 	for child in inv_bar.get_children():
@@ -444,9 +406,9 @@ func _refresh_inv_bar() -> void:
 		return
 	_populate_inv_bar()
 
-func _refresh_walkers() -> void:
-	if walker_canvas and is_instance_valid(walker_canvas):
-		walker_canvas.setup(CompanionSystem.companions)
+func _refresh_hallway() -> void:
+	if hallway_canvas and is_instance_valid(hallway_canvas):
+		hallway_canvas.setup(CompanionSystem.companions)
 
 func _on_door_chosen(index: int) -> void:
 	if not can_pick:
