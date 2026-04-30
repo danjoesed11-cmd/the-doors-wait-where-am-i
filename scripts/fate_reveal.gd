@@ -147,7 +147,6 @@ func _build_ui() -> void:
 	fight_btn.add_theme_font_size_override("font_size", 22)
 	fight_btn.add_theme_color_override("font_color", Color(0.95, 0.4, 0.2))
 	fight_btn.visible = false
-	fight_btn.pressed.connect(_on_fight)
 	action_area.add_child(fight_btn)
 
 	continue_btn = Button.new()
