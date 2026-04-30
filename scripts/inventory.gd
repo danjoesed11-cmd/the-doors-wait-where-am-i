@@ -12,17 +12,41 @@ const MAX_WEAPONS = 3
 
 # Weapon type metadata
 const WTYPES = {
-	"sword":      {"label": "SWORD",      "color": Color(0.72,0.72,0.78), "hint": "Reliable"},
-	"dagger":     {"label": "DAGGER",     "color": Color(0.40,0.92,0.55), "hint": "Roll twice"},
-	"axe":        {"label": "AXE",        "color": Color(0.92,0.50,0.18), "hint": "+12 flat dmg"},
-	"staff":      {"label": "STAFF",      "color": Color(0.45,0.55,0.98), "hint": "+2 pwr/luck"},
-	"wand":       {"label": "WAND",       "color": Color(0.78,0.38,0.95), "hint": "+3 pwr/luck"},
-	"bow":        {"label": "BOW",        "color": Color(0.40,0.88,0.40), "hint": "-8 enemy roll"},
-	"spear":      {"label": "SPEAR",      "color": Color(0.90,0.82,0.28), "hint": "First strike x2"},
-	"hammer":     {"label": "HAMMER",     "color": Color(0.80,0.62,0.35), "hint": "30% stun"},
-	"scythe":     {"label": "SCYTHE",     "color": Color(0.72,0.28,0.85), "hint": "25% lifesteal"},
-	"greatsword": {"label": "GREATSWORD", "color": Color(0.96,0.88,0.30), "hint": "1.5x dmg"},
+	"sword":      {"label": "SWORD",      "color": Color(0.72,0.72,0.78), "hint": "Reliable · best CLOSE"},
+	"dagger":     {"label": "DAGGER",     "color": Color(0.40,0.92,0.55), "hint": "Roll twice · best CLOSE"},
+	"axe":        {"label": "AXE",        "color": Color(0.92,0.50,0.18), "hint": "+12 flat dmg · best CLOSE"},
+	"staff":      {"label": "STAFF",      "color": Color(0.45,0.55,0.98), "hint": "+2 pwr/luck · best FAR"},
+	"wand":       {"label": "WAND",       "color": Color(0.78,0.38,0.95), "hint": "+3 pwr/luck · best FAR"},
+	"bow":        {"label": "BOW",        "color": Color(0.40,0.88,0.40), "hint": "-8 enemy roll · best FAR"},
+	"spear":      {"label": "SPEAR",      "color": Color(0.90,0.82,0.28), "hint": "First strike x2 · best FAR"},
+	"hammer":     {"label": "HAMMER",     "color": Color(0.80,0.62,0.35), "hint": "30% stun · best CLOSE"},
+	"scythe":     {"label": "SCYTHE",     "color": Color(0.72,0.28,0.85), "hint": "25% lifesteal · best CLOSE"},
+	"greatsword": {"label": "GREATSWORD", "color": Color(0.96,0.88,0.30), "hint": "1.5x dmg · best CLOSE/MED"},
 }
+
+# [close_mult, medium_mult, far_mult] — replaces the flat p_mult during combat
+const WTYPE_RANGE_MULTS = {
+	"sword":      [1.30, 1.00, 0.70],
+	"dagger":     [1.55, 1.00, 0.50],
+	"axe":        [1.45, 1.00, 0.55],
+	"hammer":     [1.40, 1.00, 0.60],
+	"scythe":     [1.40, 1.00, 0.60],
+	"greatsword": [1.35, 1.12, 0.65],
+	"spear":      [0.85, 1.15, 1.30],
+	"bow":        [0.50, 1.05, 1.55],
+	"staff":      [0.60, 1.10, 1.45],
+	"wand":       [0.55, 1.10, 1.50],
+}
+
+func wtype_range_mults(wtype: String) -> Array:
+	return WTYPE_RANGE_MULTS.get(wtype, [1.30, 1.00, 0.80])
+
+func wtype_best_range(wtype: String) -> String:
+	var m : Array = wtype_range_mults(wtype)
+	var best : int = 0
+	for i in range(1, 3):
+		if m[i] > m[best]: best = i
+	return ["CLOSE", "MED", "FAR"][best]
 
 var weapons: Array = []
 var heal_count: int = 0

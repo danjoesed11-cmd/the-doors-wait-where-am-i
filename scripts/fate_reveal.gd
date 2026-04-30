@@ -894,10 +894,17 @@ func _rebuild_combat_ui() -> void:
 		rb.pressed.connect(func(): _set_range(ri))
 		range_row.add_child(rb)
 
-	var range_hints = [
-		"CLOSE: your dmg +30%  ·  enemy dmg +35%  ·  miss 5%",
-		"MEDIUM: balanced  ·  miss 10%",
-		"FAR: your dmg -20%  ·  enemy dmg -25%  ·  miss 22%",
+	var cur_wtype : String = "sword"
+	if _sel_weapon >= 0 and _sel_weapon < Inventory.weapons.size():
+		cur_wtype = Inventory.weapons[_sel_weapon].get("weapon_type", "sword")
+	var cur_wmults : Array = Inventory.wtype_range_mults(cur_wtype)
+	var pct0 : int = int((cur_wmults[0] - 1.0) * 100.0)
+	var pct1 : int = int((cur_wmults[1] - 1.0) * 100.0)
+	var pct2 : int = int((cur_wmults[2] - 1.0) * 100.0)
+	var range_hints : Array = [
+		"CLOSE: %s dmg  ·  enemy +35%%  ·  miss 5%%" % _signed_pct(pct0),
+		"MEDIUM: %s dmg  ·  miss 10%%" % _signed_pct(pct1),
+		"FAR: %s dmg  ·  enemy -25%%  ·  miss 22%%" % _signed_pct(pct2),
 	]
 	var rhint := Label.new()
 	rhint.text = str(range_hints[_combat_range])
@@ -918,10 +925,11 @@ func _rebuild_combat_ui() -> void:
 			var w   = Inventory.weapons[i]
 			var wtype = w.get("weapon_type", "sword")
 			var wcol  = Inventory.wtype_color(wtype)
+			var best_r : String = Inventory.wtype_best_range(wtype)
 			var wb := Button.new()
 			wb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			wb.text = "%s\n+%d" % [Inventory.wtype_label(wtype), w.get("damage", 0)]
-			wb.custom_minimum_size = Vector2(0, 36)
+			wb.text = "%s\n+%d  [%s]" % [Inventory.wtype_label(wtype), w.get("damage", 0), best_r]
+			wb.custom_minimum_size = Vector2(0, 40)
 			wb.add_theme_font_size_override("font_size", 9)
 			if i == _sel_weapon:
 				wb.add_theme_color_override("font_color", Color(1, 1, 1))
@@ -1015,7 +1023,7 @@ func _on_attack() -> void:
 
 	var miss_ch  : float = [0.05, 0.10, 0.22][_combat_range]
 	var dodge_ch : float = [0.05, 0.12, 0.25][_combat_range]
-	var p_mult   : float = [1.30, 1.00, 0.80][_combat_range]
+	var p_mult   : float = Inventory.wtype_range_mults(wtype)[_combat_range]
 	var e_mult   : float = [1.35, 1.00, 0.75][_combat_range]
 	if wtype == "bow": miss_ch = max(0.0, miss_ch - 0.08)
 	if CompanionSystem.get_dodge_bonus() > 0: dodge_ch = min(0.65, dodge_ch + 0.05)
@@ -1136,6 +1144,9 @@ func _check_revive_or_die(cause: String) -> void:
 		continue_btn.visible = true
 	else:
 		GameManager.complete_fate({"outcome": "death", "cause": cause})
+
+func _signed_pct(v: int) -> String:
+	return ("+%d%%" % v) if v >= 0 else ("%d%%" % v)
 
 func _on_continue() -> void:
 	GameManager.complete_fate({"outcome": "continue"})
