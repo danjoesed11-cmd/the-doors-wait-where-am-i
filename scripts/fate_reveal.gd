@@ -28,6 +28,7 @@ var _combat_range: int = 1
 var _sel_weapon: int = 0
 var _combat_busy: bool = false
 var _enemy_name_str: String = "Enemy"
+var _enemy_miss: float = 0.10
 
 const TYPE_NAMES = ["DEATH","VICTORY","COMBAT","TRAP","BOON","LORE","WEAPON","COMPANION","ITEM","VILLAGE","MARRIAGE","COMPANION CAMP"]
 const TYPE_COLORS = [
@@ -825,6 +826,7 @@ func _start_combat(effect: Dictionary, win_fight: bool) -> void:
 	enemy_hp         = effect.get("enemy_hp", 30)
 	enemy_power      = effect.get("enemy_power", 10)
 	_enemy_name_str  = effect.get("enemy_name", "Beast")
+	_enemy_miss      = effect.get("enemy_miss", 0.10)
 	_combat_range    = 1
 	_sel_weapon      = 0
 	_combat_busy     = false
@@ -1057,6 +1059,15 @@ func _on_attack() -> void:
 		_combat_busy = false; _rebuild_combat_ui()
 		return
 
+	var enemy_missed : bool = randf() < _enemy_miss
+	if enemy_missed:
+		if is_instance_valid(combat_canvas):
+			combat_canvas.play_enemy_attack("MISS!", false)
+			await combat_canvas.animation_done
+		_combat_busy = false
+		_rebuild_combat_ui()
+		return
+
 	var player_evades : bool = randf() < dodge_ch
 	if player_evades:
 		if is_instance_valid(combat_canvas):
@@ -1090,6 +1101,9 @@ func _combat_victory() -> void:
 	_scroll.visible = true
 
 	PlayerStats.combat_wins += 1
+	# Brother Tomas: heal 8 HP after every combat victory
+	if CompanionSystem.has_companion("Brother Tomas"):
+		PlayerStats.heal(8 + (CompanionSystem.get_tier(CompanionSystem._get_companion("Brother Tomas")) - 1) * 4)
 	var luck_r = fate.effect.get("reward_luck", 0)
 	if luck_r > 0: PlayerStats.add_luck(luck_r)
 	var gold_r = fate.effect.get("gold_reward", 0)

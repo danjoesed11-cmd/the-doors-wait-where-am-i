@@ -142,6 +142,54 @@ func _register_fates() -> void:
 		"DEATH ITSELF", "Not the Reaper. Not a skeleton. The actual concept of death, standing in a doorway.",
 		"You fought death. This sentence should not be possible.", 62, -1, 3,
 		{"enemy_name": "Death", "enemy_hp": 350, "enemy_power": 78, "reward_luck": 8, "gold_reward": 280}))
+	all_fates.append(FateData.new("combat_dark_sorcerer", FateType.COMBAT,
+		"DARK SORCERER", "Robes of shadow. Eyes like dying stars. He doesn't need to move to destroy you.",
+		"Power without limit. Restraint without point.", 5, 14, 8,
+		{"enemy_name": "Dark Sorcerer", "enemy_hp": 90, "enemy_power": 24, "reward_luck": 2, "gold_reward": 22, "enemy_miss": 0.18}))
+	all_fates.append(FateData.new("combat_banshee", FateType.COMBAT,
+		"THE BANSHEE", "A shrieking wraith tears through the wall. It has been screaming for centuries.",
+		"The sound alone could kill something weaker than you.", 3, 10, 9,
+		{"enemy_name": "Banshee", "enemy_hp": 55, "enemy_power": 20, "reward_luck": 1, "gold_reward": 15, "enemy_miss": 0.22}))
+	all_fates.append(FateData.new("combat_stone_golem", FateType.COMBAT,
+		"STONE GOLEM", "It was a statue. Then you walked in. Now it's not.",
+		"Ten feet of animated stone. No fear. No pain. Just weight.", 12, 28, 7,
+		{"enemy_name": "Stone Golem", "enemy_hp": 240, "enemy_power": 28, "reward_luck": 3, "gold_reward": 55, "enemy_miss": 0.04}))
+	all_fates.append(FateData.new("combat_werewolf", FateType.COMBAT,
+		"WEREWOLF", "The moon doesn't reach these halls. It doesn't need to.",
+		"Teeth like blades. Speed like something hungry.", 7, 16, 8,
+		{"enemy_name": "Werewolf", "enemy_hp": 88, "enemy_power": 32, "reward_luck": 2, "gold_reward": 25, "enemy_miss": 0.15}))
+	all_fates.append(FateData.new("combat_undead_paladin", FateType.COMBAT,
+		"UNDEAD PALADIN", "Holy armor on dead bones. The blessing hasn't left. The soul has.",
+		"It still knows every fighting technique. It has forgotten mercy.", 15, 32, 7,
+		{"enemy_name": "Undead Paladin", "enemy_hp": 145, "enemy_power": 38, "reward_luck": 3, "gold_reward": 65, "enemy_miss": 0.08}))
+	all_fates.append(FateData.new("combat_phoenix", FateType.COMBAT,
+		"PHOENIX", "It burns. Everything around it burns. The room was already ash when you arrived.",
+		"It has died before. It does not mind dying again.", 20, 42, 6,
+		{"enemy_name": "Phoenix", "enemy_hp": 175, "enemy_power": 45, "reward_luck": 4, "gold_reward": 90, "enemy_miss": 0.14}))
+	all_fates.append(FateData.new("combat_kraken", FateType.COMBAT,
+		"KRAKEN", "Tentacles through the floor, ceiling, walls. There is no up. There is just the creature.",
+		"It has sunk fleets. You are one person. Interesting.", 28, 52, 5,
+		{"enemy_name": "Kraken", "enemy_hp": 280, "enemy_power": 52, "reward_luck": 5, "gold_reward": 140, "enemy_miss": 0.10}))
+	all_fates.append(FateData.new("combat_nightmare", FateType.COMBAT,
+		"THE NIGHTMARE", "It takes the shape of the thing you fear most. Then it smiles.",
+		"You cannot fight fear. But you can try.", 25, 48, 5,
+		{"enemy_name": "Nightmare", "enemy_hp": 210, "enemy_power": 50, "reward_luck": 4, "gold_reward": 105, "enemy_miss": 0.16}))
+	all_fates.append(FateData.new("combat_demon_prince", FateType.COMBAT,
+		"DEMON PRINCE", "A crown of fire. Wings of ash. A smile that means nothing good.",
+		"It rules a circle of hell from this exact spot. You are in its domain.", 40, 62, 4,
+		{"enemy_name": "Demon Prince", "enemy_hp": 340, "enemy_power": 68, "reward_luck": 6, "gold_reward": 240, "enemy_miss": 0.08}))
+	all_fates.append(FateData.new("combat_abyssal_colossus", FateType.COMBAT,
+		"ABYSSAL COLOSSUS", "You cannot see all of it at once. The room is not big enough.",
+		"Something this old has survived everything. It is curious about you.", 50, -1, 4,
+		{"enemy_name": "Abyssal Colossus", "enemy_hp": 440, "enemy_power": 75, "reward_luck": 7, "gold_reward": 320, "enemy_miss": 0.06}))
+	all_fates.append(FateData.new("combat_specter_king", FateType.COMBAT,
+		"SPECTER KING", "Every ghost in these halls answers to it. It wears them like a cloak.",
+		"You cannot kill the dead twice. But you can try.", 35, 58, 4,
+		{"enemy_name": "Specter King", "enemy_hp": 295, "enemy_power": 62, "reward_luck": 5, "gold_reward": 180, "enemy_miss": 0.20}))
+	all_fates.append(FateData.new("combat_hell_knight", FateType.COMBAT,
+		"HELL KNIGHT", "Black plate. Red eyes. A greatsword that looks like it has opinions.",
+		"It was sent ahead. As a warning. You are the warning now.", 30, 55, 5,
+		{"enemy_name": "Hell Knight", "enemy_hp": 240, "enemy_power": 58, "reward_luck": 5, "gold_reward": 165, "enemy_miss": 0.07}))
 
 	# ── TRAP ───────────────────────────────────────────────────────────────
 	all_fates.append(FateData.new("trap_poison", FateType.TRAP,
@@ -388,6 +436,51 @@ func _register_fates() -> void:
 			"partner_desc": "Seraphine has walked every corridor that exists. She fights with the certainty of someone who has already survived everything.",
 			"partner_quote": "The worst is already behind us. Probably.",
 			"bonus_desc": "+8 combat power, always"
+		}))
+	all_fates.append(FateData.new("marriage_vael", FateType.MARRIAGE,
+		"THE CHAMPION", "A warrior who stopped counting victories long ago. She counts something else now.",
+		"\"You look like you've been through it. Me too. Let's go.\"",
+		5, -1, 4, {
+			"partner_name": "Vael", "bonus_type": "fighter",
+			"partner_desc": "Vael has fought in a hundred wars and started none of them. She is extraordinarily good at staying alive.",
+			"partner_quote": "Side by side beats alone. Every time.",
+			"bonus_desc": "+10 combat power, always"
+		}))
+	all_fates.append(FateData.new("marriage_lysa", FateType.MARRIAGE,
+		"THE ROGUE", "Picks every lock she finds. Keeps whatever is inside. Mostly has good instincts about people.",
+		"\"Don't look at me like that. I only steal from people who deserve it.\"",
+		3, -1, 5, {
+			"partner_name": "Lysa", "bonus_type": "adventurer",
+			"partner_desc": "Lysa has survived by being faster, smarter, and harder to catch than everything that came after her.",
+			"partner_quote": "I'll handle the traps. You handle the monsters.",
+			"bonus_desc": "+15 max HP now, +8 gold from every combat"
+		}))
+	all_fates.append(FateData.new("marriage_aldris", FateType.MARRIAGE,
+		"THE ARCANIST", "A mage who crossed into these halls while researching them. Never left. Doesn't mind.",
+		"\"The doors don't choose randomly, you know. I've proved it. Mostly.\"",
+		5, -1, 4, {
+			"partner_name": "Aldris", "bonus_type": "scholar",
+			"partner_desc": "Aldris understands these halls better than anyone. He is still wrong about them regularly, but his averages are good.",
+			"partner_quote": "I have theories. They mostly hold.",
+			"bonus_desc": "+5 luck now, +1 luck every 3 rounds"
+		}))
+	all_fates.append(FateData.new("marriage_freya", FateType.MARRIAGE,
+		"THE MENDER", "A healer who followed the wounded into the halls. Has not run out of work.",
+		"\"You need tending. Don't argue. Sit.\"",
+		3, -1, 5, {
+			"partner_name": "Freya", "bonus_type": "healer",
+			"partner_desc": "Freya has kept more people alive in these halls than she can count. She keeps trying anyway.",
+			"partner_quote": "I'll keep you standing. You keep us moving.",
+			"bonus_desc": "Restores 20 HP every 3 rounds"
+		}))
+	all_fates.append(FateData.new("marriage_commander_rex", FateType.MARRIAGE,
+		"THE COMMANDER", "He commanded armies once. Now he commands one person. He applies the same standards.",
+		"\"We fight smart. We fight together. That's all there is to it.\"",
+		6, -1, 4, {
+			"partner_name": "Rex", "bonus_type": "fighter",
+			"partner_desc": "Commander Rex has never lost a battle he chose to fight. He chooses carefully.",
+			"partner_quote": "Follow my lead. Or don't. I'll adapt.",
+			"bonus_desc": "+12 combat power, always"
 		}))
 
 	# ── COMPANION INTERACT ─────────────────────────────────────────────────

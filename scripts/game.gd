@@ -18,6 +18,7 @@ func _ready() -> void:
 	fates = FateSystem.get_three_fates(PlayerStats.round_number)
 	_build_ui()
 	PlayerStats.stats_changed.connect(_update_hud)
+	PlayerStats.stats_changed.connect(_refresh_hallway)
 	Inventory.inventory_changed.connect(_refresh_inv_bar)
 	Inventory.inventory_changed.connect(_refresh_hallway)
 	CompanionSystem.companions_changed.connect(_refresh_inv_bar)
@@ -111,7 +112,7 @@ func _build_ui() -> void:
 		dp.door_pressed.connect(_on_door_chosen.bind(i))
 		door_panels.append(dp)
 
-	hallway_canvas.setup(CompanionSystem.companions, Inventory.weapons)
+	hallway_canvas.setup(CompanionSystem.companions, Inventory.weapons, PlayerStats.partner)
 
 func _populate_inv_bar() -> void:
 	for child in inv_bar.get_children():
@@ -409,7 +410,7 @@ func _refresh_inv_bar() -> void:
 
 func _refresh_hallway() -> void:
 	if hallway_canvas and is_instance_valid(hallway_canvas):
-		hallway_canvas.setup(CompanionSystem.companions, Inventory.weapons)
+		hallway_canvas.setup(CompanionSystem.companions, Inventory.weapons, PlayerStats.partner)
 
 func _on_door_chosen(index: int) -> void:
 	if not can_pick:

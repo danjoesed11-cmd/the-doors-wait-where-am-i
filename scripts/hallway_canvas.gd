@@ -8,11 +8,23 @@ const VP_HH = 0.09
 var _t              : float  = 0.0
 var _wks            : Array  = []
 var _player_weapon  : String = ""
+var _has_partner    : bool   = false
+var _partner_col    : Color  = Color(0.95, 0.60, 0.75)
 
-func setup(companions: Array, weapons: Array = []) -> void:
+func setup(companions: Array, weapons: Array = [], partner: Dictionary = {}) -> void:
 	_player_weapon = weapons[0].get("weapon_type", "") if not weapons.is_empty() else ""
 	_wks.clear()
 	_wks.append({"col": Color(0.92, 0.78, 0.22), "fx": 0.50, "fy": 0.88, "sc": 1.0, "po": 0.0})
+	# Partner walks just beside/behind the player
+	_has_partner = not partner.is_empty()
+	if _has_partner:
+		_wks.append({
+			"col": Color(0.95, 0.62, 0.78, 0.92),
+			"fx":  0.36,
+			"fy":  0.84,
+			"sc":  0.82,
+			"po":  TAU / 4.0
+		})
 	for i in companions.size():
 		var c   = companions[i]
 		var tc  = CompanionSystem.type_color(c.get("type", "fighter"))

@@ -141,6 +141,74 @@ const WEAPON_POOL = [
 	 "desc":"Cuts threads of life directly. You absorb what it severs."},
 	{"name":"The Last Arrow",   "rarity":6,"damage":62,"weapon_type":"bow",
 	 "desc":"One shot that rewrites the fight before it starts."},
+
+	# ── COMMON additions ────────────────────────────────────────────────────
+	{"name":"Rusty Axe",      "rarity":0,"damage":4, "weapon_type":"axe",
+	 "desc":"Dull and heavy. Still adds flat damage."},
+	{"name":"Gnarled Staff",  "rarity":0,"damage":3, "weapon_type":"staff",
+	 "desc":"A twisted branch that hums faintly. Luck amplified."},
+	{"name":"Shortbow",       "rarity":0,"damage":3, "weapon_type":"bow",
+	 "desc":"Quick to draw. Keeps the enemy guessing."},
+	{"name":"Militia Spear",  "rarity":0,"damage":4, "weapon_type":"spear",
+	 "desc":"Standard issue. First strike still counts."},
+
+	# ── RARE additions ──────────────────────────────────────────────────────
+	{"name":"Blood Dagger",   "rarity":1,"damage":8, "weapon_type":"dagger",
+	 "desc":"Stained from use. Strikes fast, rolls twice."},
+	{"name":"Flame Sword",    "rarity":1,"damage":11,"weapon_type":"sword",
+	 "desc":"The edge burns. Reliable as ever, but hotter."},
+	{"name":"Forest Bow",     "rarity":1,"damage":10,"weapon_type":"bow",
+	 "desc":"Crafted for silence. Enemy barely reacts."},
+	{"name":"Battle Axe",     "rarity":1,"damage":13,"weapon_type":"axe",
+	 "desc":"Heavier than it looks. Flat damage every swing."},
+	{"name":"Iron Staff",     "rarity":1,"damage":7, "weapon_type":"staff",
+	 "desc":"Dense and old. Every luck point counts double."},
+
+	# ── EPIC additions ──────────────────────────────────────────────────────
+	{"name":"Obsidian Blade",  "rarity":2,"damage":15,"weapon_type":"sword",
+	 "desc":"Volcanic glass edge. Never chips. Never misses its mark."},
+	{"name":"Frost Spear",     "rarity":2,"damage":17,"weapon_type":"spear",
+	 "desc":"The tip bites twice as hard on the first strike."},
+	{"name":"Plague Hammer",   "rarity":2,"damage":16,"weapon_type":"hammer",
+	 "desc":"Corroded and cursed. Stun rate is unconscionable."},
+	{"name":"Shadow Scythe",   "rarity":2,"damage":15,"weapon_type":"scythe",
+	 "desc":"Drinks deep from every wound. You feel it."},
+	{"name":"Arcane Longbow",  "rarity":2,"damage":15,"weapon_type":"bow",
+	 "desc":"Enchanted string. Enemy barely gets a shot off."},
+	{"name":"Mythril Axe",     "rarity":2,"damage":16,"weapon_type":"axe",
+	 "desc":"Mythril edge. Flat bonus is almost unfair."},
+
+	# ── LEGENDARY additions ─────────────────────────────────────────────────
+	{"name":"Demon Blade",     "rarity":3,"damage":25,"weapon_type":"sword",
+	 "desc":"Forged in hellfire. Perfectly reliable. Permanently warm."},
+	{"name":"Soul Staff",      "rarity":3,"damage":23,"weapon_type":"staff",
+	 "desc":"Channels the collected luck of a thousand mages."},
+	{"name":"Phantom Scythe",  "rarity":3,"damage":22,"weapon_type":"scythe",
+	 "desc":"Every kill restores something. You stop asking what."},
+	{"name":"War Hammer",      "rarity":3,"damage":24,"weapon_type":"hammer",
+	 "desc":"Purpose-built for stunning. It succeeds."},
+
+	# ── MYTHIC additions ────────────────────────────────────────────────────
+	{"name":"Blood Reaper",    "rarity":4,"damage":34,"weapon_type":"scythe",
+	 "desc":"Drinks greedily from every wound. You feel stronger."},
+	{"name":"Twin Fangs",      "rarity":4,"damage":30,"weapon_type":"dagger",
+	 "desc":"Two blades, one motion. Rolls twice, always."},
+	{"name":"Chaos Axe",       "rarity":4,"damage":40,"weapon_type":"axe",
+	 "desc":"Forged in a dimension with different rules. The flat bonus is absurd."},
+	{"name":"God Bow",         "rarity":4,"damage":32,"weapon_type":"bow",
+	 "desc":"The gods used this once. They put it down for a reason."},
+
+	# ── HELLISH additions ───────────────────────────────────────────────────
+	{"name":"Inferno Staff",   "rarity":5,"damage":52,"weapon_type":"staff",
+	 "desc":"Burns with a fire that predates the sun. Luck becomes something else entirely."},
+	{"name":"Hell's Edge",     "rarity":5,"damage":48,"weapon_type":"sword",
+	 "desc":"Reliable. Inevitable. Hot to the touch."},
+
+	# ── GODLIKE additions ───────────────────────────────────────────────────
+	{"name":"Oblivion Scythe", "rarity":6,"damage":72,"weapon_type":"scythe",
+	 "desc":"Severs more than flesh. It takes something from the universe itself."},
+	{"name":"The First Spear", "rarity":6,"damage":66,"weapon_type":"spear",
+	 "desc":"Thrown at the beginning of everything. First strike ends the fight."},
 ]
 
 func reset() -> void:
@@ -190,6 +258,8 @@ func use_heal() -> bool:
 	var cs = get_node_or_null("/root/CompanionSystem")
 	if cs and cs.has_companion("Old Henrick"):
 		amount += 20
+	if cs and cs.has_companion("Old Reg"):
+		amount += 30
 	PlayerStats.heal(amount)
 	emit_signal("inventory_changed")
 	return true

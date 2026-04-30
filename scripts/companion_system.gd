@@ -35,6 +35,30 @@ const COMPANION_POOL = [
 	{"name": "Lyria the Lost",  "type": "healer",  "relationship": 50,
 	 "desc": "She wandered in looking for someone. She stayed.",
 	 "passive": "Revive once per run at 20 HP."},
+	{"name": "Rogue Quinn",    "type": "scout",   "relationship": 50,
+	 "desc": "A thief who made more enemies than friends. She likes the odds in these halls.",
+	 "passive": "+6% miss chance on enemies at FAR range."},
+	{"name": "Brother Tomas", "type": "healer",  "relationship": 50,
+	 "desc": "A monk who lost his monastery to the doors. He tends wounds now instead of praying.",
+	 "passive": "Heal 8 HP after every combat victory."},
+	{"name": "Archmage Doran","type": "mage",    "relationship": 50,
+	 "desc": "He stopped counting spells long ago. The luck just flows now.",
+	 "passive": "+5 luck per round. Spells hit harder."},
+	{"name": "Iron Knight",   "type": "fighter", "relationship": 50,
+	 "desc": "Full plate, no fear, and a very heavy sword. He has opinions about formation.",
+	 "passive": "+12 combat power. Reduces incoming damage by 5."},
+	{"name": "Mira the Swift","type": "scout",   "relationship": 50,
+	 "desc": "Faster than anything she's met in here. So far.",
+	 "passive": "+8 dodge chance in combat."},
+	{"name": "Grimweld",      "type": "fighter", "relationship": 50,
+	 "desc": "A berserker who found peace — sort of — in endless combat.",
+	 "passive": "+16 combat power. No other thoughts."},
+	{"name": "Sera the Witch","type": "mage",    "relationship": 50,
+	 "desc": "She reads futures in the floor cracks. So far, yours looks interesting.",
+	 "passive": "+4 luck per round. Curses enemies."},
+	{"name": "Old Reg",       "type": "healer",  "relationship": 50,
+	 "desc": "A retired battlefield surgeon who simply refused to die.",
+	 "passive": "Potions restore +30 extra HP. His recipe."},
 ]
 
 const TYPE_COLORS = {
@@ -154,12 +178,18 @@ func all_companions_take_damage(amount: int) -> void:
 func on_round_survived() -> void:
 	for c in companions:
 		c["relationship"] = min(100, c.get("relationship", 50) + 3)
-		if c.get("name") == "Sister Mara":
+		var cname : String = c.get("name", "")
+		var ctype : String = c.get("type", "")
+		if cname == "Sister Mara":
 			PlayerStats.heal(8 + (get_tier(c) - 1) * 6)
-		elif c.get("type") == "mage":
+		elif cname == "Archmage Doran":
+			PlayerStats.add_luck(5 + (get_tier(c) - 1) * 2)
+		elif cname == "Sera the Witch":
+			PlayerStats.add_luck(4 + (get_tier(c) - 1) * 1)
+		elif ctype == "mage":
 			PlayerStats.add_luck(1)
 		# 2 HP regen per round
-		var mh = c.get("max_hp", TYPE_MAX_HP.get(c.get("type",""), 60))
+		var mh : int = c.get("max_hp", TYPE_MAX_HP.get(ctype, 60))
 		c["hp"] = min(mh, c.get("hp", mh) + 2)
 	emit_signal("companions_changed")
 
@@ -177,6 +207,8 @@ func get_combat_bonus() -> int:
 			"Sir Aldric":     bonus += 8  + (t - 1) * 4
 			"Zara the Blade": bonus += 6  + (t - 1) * 3
 			"The Iron Wolf":  bonus += 10 + (t - 1) * 5
+			"Iron Knight":    bonus += 12 + (t - 1) * 5
+			"Grimweld":       bonus += 16 + (t - 1) * 6
 			_:
 				if c.get("type") == "mage":
 					bonus += 2 + (t - 1)
@@ -189,10 +221,14 @@ func get_trap_reduction() -> float:
 	return 0.0
 
 func get_dodge_bonus() -> int:
-	var c = _get_companion("Shadow Fox")
-	if not c.is_empty():
-		return 5 + (get_tier(c) - 1) * 3
-	return 0
+	var bonus : int = 0
+	var fox = _get_companion("Shadow Fox")
+	if not fox.is_empty():
+		bonus += 5 + (get_tier(fox) - 1) * 3
+	var mira = _get_companion("Mira the Swift")
+	if not mira.is_empty():
+		bonus += 8 + (get_tier(mira) - 1) * 3
+	return bonus
 
 func check_revive() -> bool:
 	return not _revive_used and has_companion("Lyria the Lost")
